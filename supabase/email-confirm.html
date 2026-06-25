@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirme seu email — GymMatch</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0f0e1a;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f0e1a;">
+    <tr>
+      <td align="center" style="padding:48px 20px;">
+        <table width="100%" style="max-width:480px;" cellpadding="0" cellspacing="0">
+
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding-bottom:36px;">
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background:linear-gradient(135deg,#e85a4f,#f07c45);border-radius:14px;width:44px;height:44px;text-align:center;vertical-align:middle;">
+                    <span style="font-size:22px;line-height:44px;">🏋️</span>
+                  </td>
+                  <td style="padding-left:10px;vertical-align:middle;">
+                    <span style="color:#f8f7ff;font-size:22px;font-weight:700;letter-spacing:-0.5px;">GymMatch</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="background-color:#1c1b2e;border-radius:24px;padding:44px 40px;border:1px solid #2a2840;">
+
+              <!-- Ícone do envelope -->
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding-bottom:28px;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="width:68px;height:68px;border-radius:50%;background-color:#1f1d32;border:1px solid #e85a4f33;text-align:center;vertical-align:middle;">
+                          <span style="font-size:30px;line-height:68px;">✉️</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Título -->
+              <h1 style="margin:0 0 14px;color:#f8f7ff;font-size:26px;font-weight:700;text-align:center;letter-spacing:-0.5px;line-height:1.2;">
+                Confirme seu email
+              </h1>
+
+              <!-- Texto -->
+              <p style="margin:0 0 8px;color:#9d9bb0;font-size:15px;line-height:1.7;text-align:center;">
+                Bem-vindo ao <strong style="color:#f8f7ff;">GymMatch</strong>! Você está a um clique de encontrar sua galera da academia.
+              </p>
+              <p style="margin:0 0 36px;color:#9d9bb0;font-size:15px;line-height:1.7;text-align:center;">
+                Confirme seu email para ativar sua conta e começar a dar match.
+              </p>
+
+              <!-- Botão CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding-bottom:36px;">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block;background:linear-gradient(135deg,#e85a4f,#f07c45);color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;padding:16px 44px;border-radius:50px;letter-spacing:-0.2px;">
+                      Confirmar email &nbsp;→
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divisor -->
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-top:1px solid #2a2840;padding-top:28px;">
+
+                    <!-- Features -->
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="33%" align="center" style="padding:0 6px;">
+                          <p style="margin:0;font-size:22px;">🔥</p>
+                          <p style="margin:6px 0 0;color:#6b6980;font-size:11px;text-align:center;line-height:1.4;">Match com quem treina com você</p>
+                        </td>
+                        <td width="33%" align="center" style="padding:0 6px;">
+                          <p style="margin:0;font-size:22px;">💬</p>
+                          <p style="margin:6px 0 0;color:#6b6980;font-size:11px;text-align:center;line-height:1.4;">Chat em tempo real</p>
+                        </td>
+                        <td width="33%" align="center" style="padding:0 6px;">
+                          <p style="margin:0;font-size:22px;">🤖</p>
+                          <p style="margin:6px 0 0;color:#6b6980;font-size:11px;text-align:center;line-height:1.4;">Lucia, sua assistente de treino</p>
+                        </td>
+                      </tr>
+                    </table>
+
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Link de fallback -->
+          <tr>
+            <td style="padding:24px 8px 0;">
+              <p style="margin:0;color:#4a4860;font-size:12px;text-align:center;line-height:1.7;">
+                Se o botão não funcionar, copie e cole este link no seu navegador:<br>
+                <a href="{{ .ConfirmationURL }}" style="color:#e85a4f;word-break:break-all;font-size:11px;">{{ .ConfirmationURL }}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding-top:20px;">
+              <p style="margin:0;color:#35334d;font-size:11px;line-height:1.7;">
+                Você recebeu este email porque alguém criou uma conta com este endereço.<br>
+                Se não foi você, pode ignorar com segurança.
+              </p>
+              <p style="margin:10px 0 0;color:#35334d;font-size:11px;">
+                © 2025 GymMatch &nbsp;·&nbsp;
+                <a href="mailto:suporte@gymmatch.app" style="color:#4a4860;text-decoration:none;">suporte@gymmatch.app</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
