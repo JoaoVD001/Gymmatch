@@ -98,7 +98,7 @@ Segurança garantida 100% via **Row Level Security (RLS)** — cada usuário ace
 ### 1. Clone e instale
 
 ```bash
-git clone https://github.com/SEU_USUARIO/gymmatch.git
+git clone https://github.com/JoaoVD001/gymmatch.git
 cd gymmatch
 bun install
 ```
@@ -183,4 +183,4 @@ src/
 
 ## Licença
 
-MIT © [João Vitor Delfino](https://github.com/SEU_USUARIO)
+MIT © [João Vitor Delfino](https://github.com/JoaoVD001)
