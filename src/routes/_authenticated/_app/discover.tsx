@@ -242,84 +242,94 @@ function Discover() {
     </div>
   );
 
-  const rotate = dragX * 0.07;
-  const likeOpacity = Math.max(0, Math.min(dragX / SWIPE_THRESHOLD, 1));
-  const nopeOpacity = Math.max(0, Math.min(-dragX / SWIPE_THRESHOLD, 1));
+  const rotate = dragX * 0.06;
+  const progress = Math.min(Math.abs(dragX) / SWIPE_THRESHOLD, 1);
+  const likeOpacity = dragX > 0 ? progress : 0;
+  const nopeOpacity = dragX < 0 ? progress : 0;
 
   const cardStyle: React.CSSProperties = {
     transform: `translateX(${dragX}px) rotate(${rotate}deg)`,
-    transition: dragging ? "none" : "transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+    transition: dragging ? "none" : "transform 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.1)",
     cursor: dragging ? "grabbing" : "grab",
     touchAction: "none",
     userSelect: "none",
+    willChange: "transform",
+    position: "relative",
+    zIndex: 2,
+  };
+
+  const nextCard = cards[i + 1];
+  const nextScale = 0.94 + progress * 0.06;
+  const nextStyle: React.CSSProperties = {
+    transform: `scale(${nextScale})`,
+    transition: dragging ? "none" : "transform 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.1)",
+    position: "absolute",
+    inset: 0,
+    zIndex: 1,
+    pointerEvents: "none",
   };
 
   return (
     <div className="px-4 pt-6">
       <Header />
 
-      {/* Swipeable card */}
-      <div
-        key={card.id}
-        style={cardStyle}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="mt-4 overflow-hidden rounded-3xl border border-border bg-card shadow-glow will-change-transform"
-      >
-        <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted">
-          {card.photo_url ? (
-            <img
-              src={card.photo_url}
-              alt={card.name ?? ""}
-              className="h-full w-full object-cover pointer-events-none"
-              draggable={false}
+      {/* Card stack */}
+      <div className="relative mt-4">
+        {/* Card de baixo (próximo) */}
+        {nextCard && (
+          <div style={nextStyle}>
+            <CardShell card={nextCard} />
+          </div>
+        )}
+
+        {/* Card ativo — arrastável */}
+        <div
+          key={card.id}
+          style={cardStyle}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
+          <CardShell card={card}>
+            {/* Tint de cor ao arrastar */}
+            <div
+              className="absolute inset-0 pointer-events-none rounded-3xl transition-opacity"
+              style={{
+                background: dragX > 0
+                  ? `rgba(34,197,94,${likeOpacity * 0.35})`
+                  : `rgba(239,68,68,${nopeOpacity * 0.35})`,
+              }}
             />
-          ) : (
-            <div className="grid h-full w-full place-items-center text-muted-foreground">Sem foto</div>
-          )}
 
-          {/* CURTIR overlay */}
-          <div
-            className="absolute inset-0 flex items-start justify-start p-6 pointer-events-none"
-            style={{ opacity: likeOpacity }}
-          >
-            <div className="rounded-xl border-4 border-green-400 px-4 py-2 rotate-[-20deg]">
-              <span className="text-2xl font-black text-green-400 tracking-widest">CURTIR</span>
+            {/* Badge CURTIR */}
+            <div
+              className="absolute top-7 left-6 pointer-events-none"
+              style={{
+                opacity: likeOpacity,
+                transform: `rotate(-18deg) scale(${0.7 + likeOpacity * 0.3})`,
+              }}
+            >
+              <div className="flex items-center gap-2 rounded-2xl bg-green-500 px-4 py-2 shadow-lg shadow-green-500/40">
+                <Heart className="h-5 w-5 fill-white text-white" />
+                <span className="text-lg font-black tracking-widest text-white">CURTIR</span>
+              </div>
             </div>
-          </div>
 
-          {/* NOPE overlay */}
-          <div
-            className="absolute inset-0 flex items-start justify-end p-6 pointer-events-none"
-            style={{ opacity: nopeOpacity }}
-          >
-            <div className="rounded-xl border-4 border-red-400 px-4 py-2 rotate-[20deg]">
-              <span className="text-2xl font-black text-red-400 tracking-widest">NOPE</span>
+            {/* Badge NOPE */}
+            <div
+              className="absolute top-7 right-6 pointer-events-none"
+              style={{
+                opacity: nopeOpacity,
+                transform: `rotate(18deg) scale(${0.7 + nopeOpacity * 0.3})`,
+              }}
+            >
+              <div className="flex items-center gap-2 rounded-2xl bg-red-500 px-4 py-2 shadow-lg shadow-red-500/40">
+                <X className="h-5 w-5 stroke-[3] text-white" />
+                <span className="text-lg font-black tracking-widest text-white">NOPE</span>
+              </div>
             </div>
-          </div>
-
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 pt-20">
-            <h2 className="font-display text-3xl font-bold text-white">
-              {card.name ?? "Membro"}{card.age ? `, ${card.age}` : ""}
-            </h2>
-            {card.bio && <p className="mt-1 text-sm text-white/80 line-clamp-2">{card.bio}</p>}
-          </div>
-        </div>
-
-        <div className="space-y-3 p-5">
-          {card.goal && <Row icon={<Heart className="h-4 w-4" />}>Buscando {GOAL_LABELS[card.goal] ?? card.goal}</Row>}
-          {card.training_level && <Row icon={<Zap className="h-4 w-4" />}>Nível {LEVEL_LABELS[card.training_level] ?? card.training_level}</Row>}
-          {card.modalities?.length > 0 && <Row icon={<Dumbbell className="h-4 w-4" />}>{card.modalities.slice(0, 4).join(" · ")}</Row>}
-          {!card.hide_hours && card.available_hours?.length > 0 && <Row icon={<MapPin className="h-4 w-4" />}>Treina pela {card.available_hours.map(h => HOUR_LABELS[h] ?? h).join(", ")}</Row>}
-          {card.interests?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-2">
-              {card.interests.slice(0, 6).map((it) => (
-                <span key={it} className="rounded-full bg-accent px-2.5 py-1 text-xs">{it}</span>
-              ))}
-            </div>
-          )}
+          </CardShell>
         </div>
       </div>
 
@@ -335,6 +345,45 @@ function Discover() {
         >
           <Undo2 className="h-5 w-5" />
         </button>
+      </div>
+    </div>
+  );
+}
+
+function CardShell({ card, children }: { card: Card; children?: React.ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-glow">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted">
+        {card.photo_url ? (
+          <img
+            src={card.photo_url}
+            alt={card.name ?? ""}
+            className="h-full w-full object-cover pointer-events-none"
+            draggable={false}
+          />
+        ) : (
+          <div className="grid h-full w-full place-items-center text-muted-foreground">Sem foto</div>
+        )}
+        {children}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 pt-20">
+          <h2 className="font-display text-3xl font-bold text-white">
+            {card.name ?? "Membro"}{card.age ? `, ${card.age}` : ""}
+          </h2>
+          {card.bio && <p className="mt-1 text-sm text-white/80 line-clamp-2">{card.bio}</p>}
+        </div>
+      </div>
+      <div className="space-y-3 p-5">
+        {card.goal && <Row icon={<Heart className="h-4 w-4" />}>Buscando {GOAL_LABELS[card.goal] ?? card.goal}</Row>}
+        {card.training_level && <Row icon={<Zap className="h-4 w-4" />}>Nível {LEVEL_LABELS[card.training_level] ?? card.training_level}</Row>}
+        {card.modalities?.length > 0 && <Row icon={<Dumbbell className="h-4 w-4" />}>{card.modalities.slice(0, 4).join(" · ")}</Row>}
+        {!card.hide_hours && card.available_hours?.length > 0 && <Row icon={<MapPin className="h-4 w-4" />}>Treina pela {card.available_hours.map(h => HOUR_LABELS[h] ?? h).join(", ")}</Row>}
+        {card.interests?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-2">
+            {card.interests.slice(0, 6).map((it) => (
+              <span key={it} className="rounded-full bg-accent px-2.5 py-1 text-xs">{it}</span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
