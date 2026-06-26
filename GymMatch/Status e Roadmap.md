@@ -80,6 +80,7 @@
 - [ ] Testar um pagamento real de R$ 1,00 para confirmar que o repasse funciona
 
 ### Produto
+- [ ] **Reuso de email após exclusão de conta** — atualmente ao excluir a conta o usuário do Auth permanece, impedindo novo cadastro com o mesmo email. Solução: ao excluir perfil, deletar também o usuário do Auth via `supabaseAdmin.auth.admin.deleteUser(userId)`, exceto se estiver banido (checar tabela `blocks`/`reports` antes)
 - [ ] Filtros avançados no discover (por plano Diamond)
 - [ ] Sistema de boost de perfil
 - [ ] Notificações de match em tempo real (push)
