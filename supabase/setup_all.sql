@@ -455,11 +455,11 @@ begin
     end if;
   end if;
 
-  insert into public.likes (from_user, to_user, is_like) values (from_user, to_user, is_like_bool) on conflict do nothing;
+  insert into public.likes (from_user, to_user, is_like) values (handle_swipe.from_user, handle_swipe.to_user, is_like_bool) on conflict do nothing;
 
   if is_like_bool then
     select * into match_row from public.matches m
-      where m.user_a = least(from_user, to_user) and m.user_b = greatest(from_user, to_user) limit 1;
+      where m.user_a = least(handle_swipe.from_user, handle_swipe.to_user) and m.user_b = greatest(handle_swipe.from_user, handle_swipe.to_user) limit 1;
     if found then
       return json_build_object('matched', true, 'match_id', match_row.id);
     end if;
