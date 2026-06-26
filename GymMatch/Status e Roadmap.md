@@ -53,12 +53,31 @@
 
 ### Monetização
 - [ ] Webhook Stripe para cancelamentos (`customer.subscription.deleted` → reverter para free)
-- [ ] Price IDs de produção (ao fazer deploy real)
+- [ ] **Ativar Stripe para produção** — ver checklist abaixo antes do lançamento
 
 ### Deploy
 - [ ] Deploy em produção no Cloudflare Workers
 - [ ] Domínio próprio
 - [ ] Domínio de email para Resend (sair do `@resend.dev`)
+
+---
+
+## Checklist de lançamento — Stripe Produção
+
+> ⚠️ Atualmente o Stripe está em **modo sandbox** (área restrita). Nenhum pagamento real é processado. Antes de lançar:
+
+- [ ] Acessar o [dashboard de produção do Stripe](https://dashboard.stripe.com) (sem o badge "Área Restrita")
+- [ ] Completar a verificação de identidade e adicionar dados bancários para receber repasses
+- [ ] Criar os produtos **GymMatch Gold** (R$ 29,90/mês) e **GymMatch Diamond** (R$ 59,90/mês) no catálogo de **produção**
+- [ ] Copiar os novos `price_...` de produção
+- [ ] Substituir no `.env` de produção:
+  - `STRIPE_SECRET_KEY` → trocar `sk_test_...` por `sk_live_...`
+  - `VITE_STRIPE_PUBLISHABLE_KEY` → trocar `pk_test_...` por `pk_live_...`
+  - `STRIPE_PRICE_GOLD` → novo price ID de produção
+  - `STRIPE_PRICE_DIAMOND` → novo price ID de produção
+- [ ] Configurar webhook de produção no Stripe Dashboard → Developers → Webhooks
+- [ ] Adicionar `STRIPE_WEBHOOK_SECRET` ao `.env` de produção
+- [ ] Testar um pagamento real de R$ 1,00 para confirmar que o repasse funciona
 
 ### Produto
 - [ ] Filtros avançados no discover (por plano Diamond)
