@@ -9,18 +9,19 @@ Freemium com assinatura mensal. O plano gratuito é funcional o suficiente para 
 ### Free — Grátis
 Para quem está começando. Limitado mas funcional.
 
-- 20 likes por dia
+- Até 20 likes por dia
 - Até 5 matches ativos simultâneos
 - Chat de texto
+- Descobrir perfis da academia
 - Acesso à Lucia (IA)
 
-### Gold — R$ 29,90/mês
+### Gold — R$ 29,90/mês ⭐ Mais popular
 Para quem usa o app com frequência.
 
 - Likes ilimitados
 - Até 20 matches ativos
 - Chat de texto + **envio de fotos**
-- Desfazer última ação (undo)
+- Desfazer última curtida
 - Ver até 5 perfis que te curtiram
 
 ### Diamond — R$ 59,90/mês
@@ -40,6 +41,7 @@ Para quem quer o máximo.
 | Matches ativos | 5 | 20 | ∞ |
 | Fotos no chat | ✗ | ✓ | ✓ |
 | Desfazer ação | ✗ | ✓ | ✓ |
+| Acesso à Lucia (IA) | ✓ | ✓ | ✓ |
 | Ver quem curtiu | ✗ | até 5 | ∞ |
 | Boost de perfil | ✗ | ✗ | ✓ |
 | Filtros avançados | ✗ | ✗ | ✓ |
