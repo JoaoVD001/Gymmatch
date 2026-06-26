@@ -15,10 +15,11 @@ const PLANS = [
     icon: Dumbbell,
     color: "text-muted-foreground",
     benefits: [
-      "Até 10 curtidas por dia",
+      "Até 20 curtidas por dia",
       "Até 5 matches ativos",
       "Chat de texto com matches",
       "Descobrir perfis da sua academia",
+      "Acesso à Lucia (IA)",
     ],
   },
   {
@@ -30,13 +31,13 @@ const PLANS = [
     color: "text-amber-400",
     gradient: "from-amber-500/20 to-yellow-500/5",
     border: "border-amber-500/30",
+    highlight: true,
     benefits: [
       "Curtidas diárias ilimitadas",
       "Até 20 matches ativos",
       "Envio de imagens no chat",
-      "Desfazer última curtida ou match",
-      "Ver os 5 últimos perfis que te curtiram",
-      "Sem anúncios",
+      "Desfazer última curtida",
+      "Ver até 5 perfis que te curtiram",
     ],
   },
   {
@@ -48,7 +49,6 @@ const PLANS = [
     color: "text-cyan-400",
     gradient: "from-cyan-500/20 to-blue-500/5",
     border: "border-cyan-500/30",
-    highlight: true,
     benefits: [
       "Tudo do Gold",
       "Matches ilimitados",
@@ -180,7 +180,7 @@ function Premium() {
         })}
 
         <p className="text-center text-xs text-muted-foreground pt-2">
-          Simulação de pagamento — nenhum valor será cobrado.
+          Cancele quando quiser · Cobrado mensalmente via Stripe
         </p>
       </div>
     </div>
