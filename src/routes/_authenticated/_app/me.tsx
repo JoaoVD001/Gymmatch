@@ -12,7 +12,6 @@ type Full = {
   name: string | null; age: number | null; bio: string | null; photo_url: string | null;
   goal: string | null; training_level: string | null; modalities: string[]; interests: string[];
   available_hours: string[]; plan: Plan; status: string;
-  hide_orientation: boolean; hide_hours: boolean;
 };
 
 const GOAL_LABELS: Record<string, string> = {
@@ -53,7 +52,7 @@ function Me() {
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles")
-      .select("name,age,bio,photo_url,goal,training_level,modalities,interests,available_hours,plan,status,hide_orientation,hide_hours")
+      .select("name,age,bio,photo_url,goal,training_level,modalities,interests,available_hours,plan,status")
       .eq("id", user.id).maybeSingle()
       .then(({ data }) => setP(data as Full | null));
     supabase.from("user_photos").select("id,url,position").eq("user_id", user.id).order("position")
@@ -69,7 +68,16 @@ function Me() {
     else { toast.success(status === "paused" ? "Conta pausada" : "Conta reativada"); refreshProfile(); }
   }
 
-  if (!p) return <div className="grid min-h-[60vh] place-items-center text-muted-foreground">Carregando...</div>;
+  if (!p) return (
+    <div className="grid min-h-[60vh] place-items-center px-6 text-center">
+      <div className="space-y-4">
+        <p className="text-muted-foreground">Não foi possível carregar o perfil.</p>
+        <button onClick={signOut} className="rounded-2xl bg-card border border-border px-6 py-2.5 text-sm font-medium">
+          Sair
+        </button>
+      </div>
+    </div>
+  );
 
   const isPaused = p.status === "paused";
 

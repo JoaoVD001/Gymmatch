@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Flag, Ban, ImagePlus } from "lucide-react";
+import { ArrowLeft, Send, Flag, Ban, ImagePlus, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/chat/$matchId")({ component: Chat });
 
@@ -133,10 +133,23 @@ function Chat() {
       </div>
       {matchActive && (
         <div className="flex items-center gap-2 border-t border-border bg-background px-3 py-2 safe-bottom">
-          <label className="cursor-pointer rounded-full p-2 hover:bg-accent">
-            <ImagePlus className="h-5 w-5 text-muted-foreground" />
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && sendImage(e.target.files[0])} />
-          </label>
+          {profile?.plan === "gold" || profile?.plan === "diamond" ? (
+            <label className="cursor-pointer rounded-full p-2 hover:bg-accent">
+              <ImagePlus className="h-5 w-5 text-muted-foreground" />
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && sendImage(e.target.files[0])} />
+            </label>
+          ) : (
+            <button
+              type="button"
+              onClick={() => toast.error("Envio de imagens é exclusivo para Gold e Diamond.", {
+                action: { label: "Ver planos", onClick: () => nav({ to: "/premium" }) },
+              })}
+              className="relative rounded-full p-2 hover:bg-accent"
+            >
+              <ImagePlus className="h-5 w-5 text-muted-foreground/40" />
+              <Lock className="absolute bottom-1.5 right-1.5 h-2.5 w-2.5 text-primary" />
+            </button>
+          )}
           <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Mensagem..."
             className="flex-1 rounded-full border border-border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />

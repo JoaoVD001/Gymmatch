@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { LUCIA_BOT, getLuciaUnread } from "@/lib/lucia";
 import { LuciaAvatar } from "@/routes/_authenticated/chat.lucia";
-import { Heart, X } from "lucide-react";
+import { Heart, X, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/matches")({ component: Matches });
 
@@ -161,48 +161,83 @@ function Matches() {
         <h1 className="font-display text-2xl font-bold">Matches</h1>
         <p className="mt-1 text-sm text-muted-foreground">Suas conexões na academia</p>
 
-        {/* Solicitações pendentes */}
-        {requests.length > 0 && (
-          <div className="mt-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              Solicitações · {requests.length}
-            </p>
-            <div className="space-y-3">
-              {requests.map((req) => (
-                <div key={req.from_user} className="flex items-center gap-3 rounded-2xl border border-border bg-card/60 px-4 py-3">
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
-                    {req.photo_url
-                      ? <img src={req.photo_url} className="h-full w-full object-cover" alt="" />
-                      : <div className="h-full w-full bg-gradient-to-br from-primary/30 to-primary/10" />
-                    }
+        {/* Solicitações pendentes — limitado por plano */}
+        {(() => {
+          const plan = profile?.plan ?? "free";
+          const limit = plan === "diamond" ? Infinity : plan === "gold" ? 5 : 0;
+          const visible = requests.slice(0, limit === Infinity ? undefined : limit);
+
+          if (requests.length === 0) return null;
+
+          return (
+            <div className="mt-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Quem curtiu você · {limit === 0 ? "🔒" : `${visible.length}${requests.length > visible.length ? `/${requests.length}` : ""}`}
+                </p>
+                {plan !== "diamond" && (
+                  <Link to="/premium" className="text-xs text-primary font-medium">
+                    {plan === "free" ? "Desbloquear" : "Ver todos →"}
+                  </Link>
+                )}
+              </div>
+
+              {limit === 0 ? (
+                <Link to="/premium" className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4">
+                  <div className="grid h-12 w-12 place-items-center rounded-full bg-primary/10">
+                    <Lock className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold truncate">{req.name ?? "Membro"}{req.age ? `, ${req.age}` : ""}</p>
-                    <p className="text-xs text-muted-foreground">curtiu seu perfil 💜</p>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">{requests.length} pessoa{requests.length > 1 ? "s" : ""} curtiu seu perfil</p>
+                    <p className="text-xs text-muted-foreground">Assine Gold para ver quem são</p>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      disabled={respondingTo === req.from_user}
-                      onClick={() => respond(req.from_user, false)}
-                      className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-40"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={respondingTo === req.from_user}
-                      onClick={() => respond(req.from_user, true)}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow hover:opacity-90 transition-opacity disabled:opacity-40"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <Heart className="h-4 w-4 text-primary" />
+                </Link>
+              ) : (
+                <div className="space-y-3">
+                  {visible.map((req) => (
+                    <div key={req.from_user} className="flex items-center gap-3 rounded-2xl border border-border bg-card/60 px-4 py-3">
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
+                        {req.photo_url
+                          ? <img src={req.photo_url} className="h-full w-full object-cover" alt="" />
+                          : <div className="h-full w-full bg-gradient-to-br from-primary/30 to-primary/10" />
+                        }
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate">{req.name ?? "Membro"}{req.age ? `, ${req.age}` : ""}</p>
+                        <p className="text-xs text-muted-foreground">curtiu seu perfil 💜</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={respondingTo === req.from_user}
+                          onClick={() => respond(req.from_user, false)}
+                          className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-40"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={respondingTo === req.from_user}
+                          onClick={() => respond(req.from_user, true)}
+                          className="grid h-9 w-9 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow hover:opacity-90 transition-opacity disabled:opacity-40"
+                        >
+                          <Heart className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {requests.length > visible.length && (
+                    <Link to="/premium" className="flex items-center justify-center gap-1.5 rounded-2xl border border-border py-3 text-sm text-muted-foreground hover:bg-card">
+                      <Lock className="h-3.5 w-3.5" />
+                      +{requests.length - visible.length} perfis bloqueados — assine Diamond para ver todos
+                    </Link>
+                  )}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <ul className="mt-6 divide-y divide-border">
           {/* Lucia bot */}

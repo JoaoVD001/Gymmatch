@@ -29,8 +29,8 @@ function AuthPage() {
     if (!loading && session) {
       if (mode === "reset") return;
       if (isAdmin) nav({ to: "/admin" });
-      else if (profile && !profile.profile_complete) nav({ to: "/onboarding" });
-      else nav({ to: "/discover" });
+      else if (profile?.profile_complete) nav({ to: "/discover" });
+      else nav({ to: "/onboarding" });
     }
   }, [loading, session, isAdmin, profile, nav, mode]);
 

@@ -145,12 +145,12 @@ function Onboarding() {
         <div className="space-y-3">
           <Field label="Objetivo principal">
             <div className="grid grid-cols-3 gap-2">
-              {GOALS.map((g) => <Pill key={g} active={form.goal === g} onClick={() => setForm({ ...form, goal: g, looking_for: Array.from(new Set([...form.looking_for, g])) })}>{labelOf(g)}</Pill>)}
+              {GOALS.map((g) => <Pill key={g} active={form.goal === g} onClick={() => setForm({ ...form, goal: g })}>{labelOf(g)}</Pill>)}
             </div>
           </Field>
           <Field label="Também aberto a">
             <div className="grid grid-cols-3 gap-2">
-              {GOALS.map((g) => <Pill key={g} active={form.looking_for.includes(g)} onClick={() => setForm({ ...form, looking_for: toggle(form.looking_for, g) })}>{labelOf(g)}</Pill>)}
+              {GOALS.map((g) => <Pill key={g} active={form.looking_for[0] === g} onClick={() => setForm({ ...form, looking_for: [g] })}>{labelOf(g)}</Pill>)}
             </div>
           </Field>
           <Field label="Me mostre (para romance)">

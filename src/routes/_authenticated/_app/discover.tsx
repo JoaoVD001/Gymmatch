@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Heart, X, Dumbbell, MapPin, Zap } from "lucide-react";
+import { Heart, X, Dumbbell, MapPin, Zap, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { hasUsedSwipe, markSwipeUsed } from "@/lib/lucia";
 
@@ -47,6 +47,7 @@ function Discover() {
   const [cards, setCards] = useState<Card[]>([]);
   const [i, setI] = useState(0);
   const [loading, setLoading] = useState(true);
+  const lastLikedRef = useRef<{ id: string; index: number } | null>(null);
 
   // Swipe state
   const startXRef = useRef(0);
@@ -152,20 +153,21 @@ function Discover() {
     const data = rpcData as { blocked?: boolean; reason?: string; matched?: boolean; match_id?: string } | null;
     if (error) { toast.error(error.message); return; }
     if (data?.blocked && data?.reason === "daily_limit_reached") {
-      toast.error("Limite diário de curtidas atingido. Assine um plano para curtidas ilimitadas.");
+      toast.error("Limite diário de curtidas atingido. Assine Gold para curtidas ilimitadas.", {
+        action: { label: "Ver planos", onClick: () => nav({ to: "/premium" }) },
+      });
       return;
     }
     if (data?.blocked && data?.reason === "limit_reached") {
-      toast.error("Você atingiu o limite de matches do seu plano.");
-      nav({ to: "/premium" });
+      toast.error("Limite de matches atingido no seu plano.", {
+        action: { label: "Ver planos", onClick: () => nav({ to: "/premium" }) },
+      });
       return;
     }
-    if (data?.pending) {
-      toast("Curtida enviada! Aguarde a resposta. 💜", { duration: 2500 });
-    }
+    if (isLike) lastLikedRef.current = { id: target.id, index: i };
     if (data?.matched && data?.match_id) {
       toast.success(`Deu match com ${target.name ?? "alguém da academia"}! 🔥`, {
-        description: "Abrindo o chat para vocês conversarem...",
+        description: "Abrindo o chat...",
         duration: 4000,
         action: {
           label: "Abrir chat",
@@ -178,6 +180,22 @@ function Discover() {
       return;
     }
     setI((x) => x + 1);
+  }
+
+  async function undo() {
+    const plan = profile?.plan ?? "free";
+    if (plan === "free") {
+      toast.error("Desfazer curtida é exclusivo para Gold e Diamond.", {
+        action: { label: "Ver planos", onClick: () => nav({ to: "/premium" }) },
+      });
+      return;
+    }
+    if (!user || !lastLikedRef.current) return;
+    const { id, index } = lastLikedRef.current;
+    await supabase.from("likes").delete().eq("from_user", user.id).eq("to_user", id);
+    lastLikedRef.current = null;
+    setI(index);
+    toast("Curtida desfeita.");
   }
 
   function triggerSwipe(isLike: boolean) {
@@ -306,9 +324,17 @@ function Discover() {
       </div>
 
       {/* Buttons */}
-      <div className="mt-6 flex items-center justify-center gap-6">
+      <div className="mt-6 flex items-center justify-center gap-4">
         <Action onClick={() => triggerSwipe(false)} variant="reject"><X className="h-7 w-7" /></Action>
         <Action onClick={() => triggerSwipe(true)} variant="like"><Heart className="h-7 w-7" /></Action>
+        <button
+          type="button"
+          onClick={undo}
+          title="Desfazer (Gold/Diamond)"
+          className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-muted-foreground transition active:scale-95"
+        >
+          <Undo2 className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );
