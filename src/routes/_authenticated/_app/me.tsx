@@ -47,16 +47,19 @@ function Me() {
   const { user, isAdmin, signOut, refreshProfile } = useAuth();
   const [p, setP] = useState<Full | null>(null);
   const [photos, setPhotos] = useState<Array<{ id: string; url: string }>>([]);
+  const [loading, setLoading] = useState(true);
   const nav = useNavigate();
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles")
-      .select("name,age,bio,photo_url,goal,training_level,modalities,interests,available_hours,plan,status")
-      .eq("id", user.id).maybeSingle()
-      .then(({ data }) => setP(data as Full | null));
-    supabase.from("user_photos").select("id,url,position").eq("user_id", user.id).order("position")
-      .then(({ data }) => setPhotos((data ?? []) as Array<{ id: string; url: string }>));
+    Promise.all([
+      supabase.from("profiles")
+        .select("name,age,bio,photo_url,goal,training_level,modalities,interests,available_hours,plan,status")
+        .eq("id", user.id).maybeSingle()
+        .then(({ data }) => setP(data as Full | null)),
+      supabase.from("user_photos").select("id,url,position").eq("user_id", user.id).order("position")
+        .then(({ data }) => setPhotos((data ?? []) as Array<{ id: string; url: string }>)),
+    ]).finally(() => setLoading(false));
   }, [user]);
 
   async function setStatus(status: "active" | "paused" | "deleted") {
@@ -67,6 +70,10 @@ function Me() {
     if (status === "deleted") { await signOut(); nav({ to: "/" }); }
     else { toast.success(status === "paused" ? "Conta pausada" : "Conta reativada"); refreshProfile(); }
   }
+
+  if (loading) return (
+    <div className="grid min-h-[60vh] place-items-center text-muted-foreground">Carregando...</div>
+  );
 
   if (!p) return (
     <div className="grid min-h-[60vh] place-items-center px-6 text-center">
