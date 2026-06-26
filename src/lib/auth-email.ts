@@ -128,27 +128,27 @@ function resetHtml(url: string) {
   `);
 }
 
-async function sendViaResend(to: string, subject: string, html: string) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY não configurado");
+async function sendEmail(to: string, subject: string, html: string) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) throw new Error("BREVO_API_KEY não configurado");
 
-  const res = await fetch("https://api.resend.com/emails", {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      "api-key": apiKey,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "GymMatch <onboarding@resend.dev>",
-      to: [to],
+      sender: { name: "GymMatch", email: "joaovitordelfino2005@gmail.com" },
+      to: [{ email: to }],
       subject,
-      html,
+      htmlContent: html,
     }),
   });
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Resend: ${body}`);
+    throw new Error(`Brevo: ${body}`);
   }
 }
 
@@ -168,7 +168,7 @@ export const signUpAndSendEmail = createServerFn({ method: "POST" }).handler(asy
 
   if (error) throw new Error(error.message);
 
-  await sendViaResend(
+  await sendEmail(
     email,
     "Confirme seu email — GymMatch",
     confirmHtml(data.properties.action_link)
@@ -191,7 +191,7 @@ export const sendPasswordResetEmail = createServerFn({ method: "POST" }).handler
 
   if (error) throw new Error(error.message);
 
-  await sendViaResend(
+  await sendEmail(
     email,
     "Redefinir sua senha — GymMatch",
     resetHtml(data.properties.action_link)

@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Dumbbell } from "lucide-react";
-import { signUpAndSendEmail, sendPasswordResetEmail } from "@/lib/auth-email";
 import { translateError } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth")({
@@ -47,26 +46,23 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        await signUpAndSendEmail({
-          data: {
-            email,
-            password,
-            redirectTo: `${window.location.origin}/auth`,
-          },
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth` },
         });
-        toast.success("Email enviado! Confirme sua conta para continuar.");
+        if (error) throw error;
+        toast.success("Conta criada! Verifique seu email para confirmar.");
 
       } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
       } else if (mode === "forgot") {
-        await sendPasswordResetEmail({
-          data: {
-            email,
-            redirectTo: `${window.location.origin}/auth`,
-          },
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth`,
         });
+        if (error) throw error;
         toast.success("Email enviado! Verifique sua caixa de entrada.");
         setMode("signin");
 
