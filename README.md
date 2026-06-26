@@ -9,6 +9,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=flat-square&logo=cloudflare)](https://workers.cloudflare.com)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
+[![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?style=flat-square&logo=stripe)](https://stripe.com)
 
 [Demo ao vivo](#) · [Reportar bug](mailto:suporte@gymmatch.app)
 
@@ -33,7 +34,8 @@ Construído com foco em **mobile-first**, **performance de edge** e **funcionali
 - **Chat em tempo real** — mensagens instantâneas com Supabase Realtime
 - **Envio de fotos no chat** — disponível nos planos Gold e Diamond
 - **Lucia (IA integrada)** — assistente virtual com memória de conversa, respostas via Groq API e push notifications por inatividade
-- **Planos de assinatura** — Free / Gold / Diamond com benefícios progressivos
+- **Planos de assinatura** — Free / Gold / Diamond com benefícios progressivos e enforcement real
+- **Pagamento via Stripe** — checkout seguro com cartão de crédito e Pix, ativação imediata
 - **Bloqueio e denúncia** — segurança diretamente pelo chat
 
 ### Painel Admin
@@ -57,6 +59,7 @@ Construído com foco em **mobile-first**, **performance de edge** e **funcionali
 | Deploy | [Cloudflare Workers](https://workers.cloudflare.com) |
 | UI | [shadcn/ui](https://ui.shadcn.com) + [Tailwind CSS v4](https://tailwindcss.com) |
 | IA | [Groq API](https://groq.com) — Llama 3.1 8B |
+| Pagamentos | [Stripe](https://stripe.com) — Checkout + assinaturas recorrentes |
 | Email | [Resend](https://resend.com) |
 | Package manager | [Bun](https://bun.sh) |
 | Linguagem | TypeScript 5.8 |
@@ -94,6 +97,7 @@ Segurança garantida 100% via **Row Level Security (RLS)** — cada usuário ace
 - Conta gratuita no [Supabase](https://supabase.com)
 - Conta gratuita no [Resend](https://resend.com)
 - Conta gratuita no [Groq](https://console.groq.com)
+- Conta no [Stripe](https://stripe.com) (sandbox gratuito para testes)
 
 ### 1. Clone e instale
 
@@ -148,7 +152,9 @@ src/
 │       │   ├── discover.tsx           # Swipe de perfis
 │       │   ├── matches.tsx            # Lista de matches
 │       │   ├── me.tsx                 # Perfil do usuário
-│       │   └── premium.tsx            # Planos de assinatura
+│       │   ├── premium.tsx            # Planos de assinatura
+│       │   ├── payment.tsx            # Checkout Stripe
+│       │   └── payment_.success.tsx   # Confirmação pós-pagamento
 │       └── _admin/
 │           ├── admin.users.tsx
 │           ├── admin.gyms.tsx
@@ -161,6 +167,7 @@ src/
     ├── auth-email.ts                  # Emails via Resend API
     ├── lucia.ts                       # Lógica local da Lucia
     ├── lucia-ai.ts                    # Server function Groq
+    ├── stripe.ts                      # Checkout e ativação de planos via Stripe
     └── push.ts                        # Web Push notifications
 ```
 
