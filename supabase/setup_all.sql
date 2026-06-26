@@ -502,16 +502,22 @@ create policy "gyms admin write" on public.gyms for all to authenticated
   using (public.has_role(auth.uid(),'admin')) with check (public.has_role(auth.uid(),'admin'));
 
 create policy "profile self read" on public.profiles for select to authenticated using (id = auth.uid());
+-- Security definer function needed because user_gyms RLS blocks cross-user reads inside policies
+create or replace function public.check_same_gym(viewer_id uuid, profile_id uuid)
+returns boolean language sql security definer set search_path = public as $$
+  select exists (
+    select 1 from user_gyms a
+    join user_gyms b on a.gym_id = b.gym_id
+    where a.user_id = viewer_id and b.user_id = profile_id
+  );
+$$;
+
 create policy "profile same gym read" on public.profiles for select to authenticated
   using (
     status = 'active' and profile_complete = true and photo_url is not null
-    and exists (
-      select 1 from public.user_gyms ug_other
-      where ug_other.user_id = profiles.id
-        and ug_other.gym_id in (select ug_me.gym_id from public.user_gyms ug_me where ug_me.user_id = auth.uid())
-    )
-    and not exists (select 1 from public.blocks b where b.blocker_id = profiles.id and b.blocked_id = auth.uid())
-    and not exists (select 1 from public.blocks b where b.blocker_id = auth.uid() and b.blocked_id = profiles.id)
+    and public.check_same_gym(auth.uid(), id)
+    and not exists (select 1 from public.blocks b where b.blocker_id = id and b.blocked_id = auth.uid())
+    and not exists (select 1 from public.blocks b where b.blocker_id = auth.uid() and b.blocked_id = id)
   );
 create policy "profile admin read" on public.profiles for select to authenticated
   using (public.has_role(auth.uid(),'admin'));
