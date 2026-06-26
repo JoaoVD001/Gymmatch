@@ -15,19 +15,30 @@
 - [x] Recuperação de senha por email
 - [x] Bypass do email do Supabase via Resend API
 - [x] Templates de email customizados (light theme, branded)
+- [x] Redirect pós-confirmação → onboarding (corrigido)
 - [x] Todos os erros traduzidos para português
 
 ### App
 - [x] Landing page
-- [x] Onboarding completo
+- [x] Onboarding completo (single-select corrigido)
 - [x] Entrada via QR code por academia
-- [x] Discover com swipe de perfis
+- [x] Discover com swipe de perfis + undo (Gold/Diamond)
 - [x] Sistema de match via trigger no PostgreSQL
 - [x] Chat em tempo real (Supabase Realtime)
+- [x] Envio de imagens no chat (Gold/Diamond)
 - [x] IA Lucia integrada (Groq API)
 - [x] Push notifications
 - [x] Bloqueio e denúncia de usuários
 - [x] Painel administrativo completo
+- [x] Página de perfil com fallback de erro
+
+### Monetização
+- [x] Tela de planos redesenhada (`/premium`)
+- [x] Stripe Checkout integrado (cartão + Pix)
+- [x] Ativação automática do plano após pagamento
+- [x] Enforcement de limites: likes, matches, imagens, desfazer
+- [x] "Quem curtiu você" bloqueado/limitado por plano
+- [x] Tela de sucesso pós-pagamento
 
 ### Design
 - [x] Dark theme com design system próprio (oklch)
@@ -41,10 +52,8 @@
 ## Pendente
 
 ### Monetização
-- [ ] Integração Stripe para pagamentos
-- [ ] Webhooks de confirmação de pagamento
-- [ ] Enforcement de limites por plano no backend
-- [ ] Página de sucesso / cancelamento de assinatura
+- [ ] Webhook Stripe para cancelamentos (`customer.subscription.deleted` → reverter para free)
+- [ ] Price IDs de produção (ao fazer deploy real)
 
 ### Deploy
 - [ ] Deploy em produção no Cloudflare Workers
