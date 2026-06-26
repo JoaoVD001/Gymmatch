@@ -22,7 +22,6 @@ const ERROR_MAP: Record<string, string> = {
   "too many requests": "Muitas tentativas. Aguarde um momento e tente novamente.",
   "network error": "Erro de conexão. Verifique sua internet.",
   "failed to fetch": "Erro de conexão. Verifique sua internet.",
-  "resend:": "Falha ao enviar email. Tente novamente.",
 };
 
 export function translateError(message: string): string {
