@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { ArrowLeft, Camera, Lock, X, AlertTriangle, Check, Search, Plus, Star } from "lucide-react";
+import { ArrowLeft, Lock, X, Check, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/profile/edit")({ component: EditProfile });
 
@@ -54,8 +54,6 @@ function toggle<T>(arr: T[], v: T): T[] {
 function EditProfile() {
   const { user, refreshProfile } = useAuth();
   const nav = useNavigate();
-  const fileRef        = useRef<HTMLInputElement>(null);
-  const extraPhotoRef  = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<Form>({
     name: "", gender: "", sexual_orientation: "", hide_orientation: false,
@@ -68,9 +66,6 @@ function EditProfile() {
   const [nameError,    setNameError]    = useState("");
   const [gymError,     setGymError]     = useState("");
   const [busy,          setBusy]          = useState(false);
-  const [uploading,     setUploading]     = useState(false);
-  const [photos,        setPhotos]        = useState<Array<{ id: string; url: string; position: number }>>([]);
-  const [photoUploading, setPhotoUploading] = useState(false);
   const [allGyms,      setAllGyms]      = useState<Gym[]>([]);
   const [initialGymIds, setInitialGymIds] = useState<string[]>([]);
   const [gymSearch,    setGymSearch]    = useState("");
@@ -101,8 +96,6 @@ function EditProfile() {
       });
     supabase.from("gyms").select("id,name,address").eq("active", true).order("name")
       .then(({ data }) => setAllGyms((data ?? []) as Gym[]));
-    supabase.from("user_photos").select("id,url,position").eq("user_id", user.id).order("position")
-      .then(({ data }) => setPhotos((data ?? []) as Array<{ id: string; url: string; position: number }>));
     supabase.from("user_gyms").select("gym_id").eq("user_id", user.id)
       .then(({ data }) => {
         const ids = (data ?? []).map((r) => r.gym_id as string);
@@ -110,72 +103,6 @@ function EditProfile() {
         setForm((f) => ({ ...f, gym_ids: ids }));
       });
   }, [user]);
-
-  async function onFile(file: File) {
-    if (!user) return;
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-      const { error } = await supabase.from("profiles").update({ photo_url: urlData.publicUrl }).eq("id", user.id);
-      if (error) throw error;
-      setForm((f) => ({ ...f, photo_url: urlData.publicUrl }));
-      toast.success("Foto atualizada");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao enviar foto");
-    } finally { setUploading(false); }
-  }
-
-  async function removePhoto() {
-    setSheet(false);
-    if (!user) return;
-    const { error } = await supabase.from("profiles").update({ photo_url: null }).eq("id", user.id);
-    if (error) return toast.error(error.message);
-    setForm((f) => ({ ...f, photo_url: null }));
-    toast.success("Foto removida");
-  }
-
-  async function uploadExtraPhoto(file: File) {
-    if (!user) return;
-    if (photos.length >= 5) { toast.error("Máximo de 5 fotos extras"); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("A foto deve ter no máximo 10 MB"); return; }
-    setPhotoUploading(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/photos/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: false });
-      if (upErr) { toast.error(upErr.message); return; }
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-      const nextPos = photos.length > 0 ? Math.max(...photos.map((p) => p.position)) + 1 : 0;
-      const { data: inserted, error } = await supabase
-        .from("user_photos")
-        .insert({ user_id: user.id, url: urlData.publicUrl, position: nextPos })
-        .select("id,url,position")
-        .single();
-      if (error) { toast.error(error.message); return; }
-      setPhotos((prev) => [...prev, inserted as { id: string; url: string; position: number }]);
-      toast.success("Foto adicionada");
-    } catch (e) {
-      toast.error((e as any)?.message ?? "Falha ao enviar foto");
-    } finally { setPhotoUploading(false); }
-  }
-
-  async function deleteExtraPhoto(id: string, url: string) {
-    if (!user) return;
-    const marker = "/avatars/";
-    const markerIndex = url.indexOf(marker);
-    const { error } = await supabase.from("user_photos").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    if (markerIndex !== -1) {
-      const bucketPath = decodeURIComponent(url.slice(markerIndex + marker.length));
-      await supabase.storage.from("avatars").remove([bucketPath]);
-    }
-    setPhotos((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Foto removida");
-  }
 
   function addInterest() {
     const v = interestInput.trim();
@@ -253,113 +180,6 @@ function EditProfile() {
       </header>
 
       <div className="px-5 pt-6">
-        {/* Grade de fotos unificada */}
-        <input ref={fileRef} type="file" accept="image/*" hidden
-          onChange={(e) => { if (e.target.files?.[0]) onFile(e.target.files[0]); e.target.value = ""; }} />
-        <input ref={extraPhotoRef} type="file" accept="image/*" hidden
-          onChange={(e) => { if (e.target.files?.[0]) uploadExtraPhoto(e.target.files[0]); e.target.value = ""; }} />
-
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-[13px] font-semibold text-muted-foreground">Fotos</h2>
-          <span className="text-[12px] text-muted-foreground">{(form.photo_url ? 1 : 0) + photos.length}/6</span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-1.5 mb-2">
-          {/* Slot principal — ocupa 2 colunas e 2 linhas */}
-          <div className="col-span-2 row-span-2 relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/60 border border-border/40">
-            {form.photo_url ? (
-              <>
-                <img src={form.photo_url} alt="" className="h-full w-full object-cover" />
-                {(uploading) && (
-                  <div className="absolute inset-0 bg-black/50 grid place-items-center">
-                    <span className="text-xs text-white animate-pulse">Enviando…</span>
-                  </div>
-                )}
-                <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 backdrop-blur-sm">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  <span className="text-[10px] font-semibold text-white">Principal</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-black/80 transition-colors"
-                  aria-label="Trocar foto"
-                >
-                  <Camera className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={removePhoto}
-                  className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-destructive/80 transition-colors"
-                  aria-label="Remover foto"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
-              >
-                {uploading ? (
-                  <span className="text-xs animate-pulse">Enviando…</span>
-                ) : (
-                  <>
-                    <div className="grid h-12 w-12 place-items-center rounded-full bg-primary/10">
-                      <Camera className="h-6 w-6 text-primary" />
-                    </div>
-                    <span className="text-xs font-medium">Foto principal</span>
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-
-          {/* Slots extras (até 5) */}
-          {Array.from({ length: 4 }).map((_, idx) => {
-            const photo = photos[idx];
-            const isLoading = photoUploading && idx === photos.length;
-            return (
-              <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden bg-muted/60 border border-border/40">
-                {photo ? (
-                  <>
-                    <img src={photo.url} alt="" className="h-full w-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => deleteExtraPhoto(photo.id, photo.url)}
-                      className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-destructive/80 transition-colors"
-                      aria-label="Remover"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => photos.length < 5 && extraPhotoRef.current?.click()}
-                    disabled={isLoading || !form.photo_url}
-                    className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
-                  >
-                    {isLoading ? (
-                      <span className="text-[10px] animate-pulse">...</span>
-                    ) : (
-                      <Plus className="h-5 w-5" />
-                    )}
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {!form.photo_url && !uploading && (
-          <div className="mb-6 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/8 px-3 py-2.5 text-xs text-amber-400">
-            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <p>Adicione uma foto principal para aparecer no Descobrir.</p>
-          </div>
-        )}
 
         {/* Informações pessoais */}
         <Section title="Informações pessoais">
