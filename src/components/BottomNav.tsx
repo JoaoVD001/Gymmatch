@@ -30,7 +30,10 @@ export function BottomNav() {
                   {/* Barra vermelha no topo */}
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_8px_2px_hsl(var(--primary))]" />
                   {/* Cone de luz descendo */}
-                  <span className="absolute inset-0 pointer-events-none bg-gradient-to-b from-primary/40 via-primary/10 to-transparent" />
+                  <span
+                    className="absolute inset-0 pointer-events-none bg-gradient-to-b from-primary/50 via-primary/15 to-transparent"
+                    style={{ clipPath: "polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)" }}
+                  />
                 </>
               )}
 
