@@ -44,7 +44,7 @@
 - [x] Toasts customizados com borda colorida por tipo
 - [x] Favicon SVG com ícone Dumbbell
 - [x] Título da aba: "GymMatch"
-- [x] Bottom nav: pill flutuante com glass blur e label animado no item ativo
+- [x] Bottom nav: efeito spotlight — barra vermelha no topo + cone de luz descendo sobre o ícone ativo, fundo zinc sólido escuro
 - [x] Discover: pilha de cards, tint verde/vermelho ao arrastar, badges CURTIR/NOPE com glow
 - [x] Perfil (`/me`): layout estilo Instagram — botões em linha, engrenagem abre sheet de configurações
 - [x] Fotos: grade unificada estilo Tinder na tela de edição (foto principal 2×2 + extras), upload direto sem bottom sheet
