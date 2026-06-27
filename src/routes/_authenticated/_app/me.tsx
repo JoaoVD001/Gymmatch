@@ -284,10 +284,10 @@ function Me() {
               <span className="text-xs text-muted-foreground">{totalPhotos}/6</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5">
-
-              {/* Slot principal — 2×2 */}
-              <div className="col-span-2 row-span-2 relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted/60 border border-border/40">
+            {/* Linha superior: foto principal (2/3) + 2 extras (1/3) */}
+            <div className="flex gap-1 mb-1">
+              {/* Slot principal */}
+              <div className="relative rounded-2xl overflow-hidden bg-muted/60 border border-border/40" style={{ flex: 2, aspectRatio: "4/5" }}>
                 {p.photo_url ? (
                   <>
                     <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
@@ -325,8 +325,37 @@ function Me() {
                 )}
               </div>
 
-              {/* Slots extras (4 slots) */}
-              {Array.from({ length: 4 }).map((_, idx) => {
+              {/* Slots extras 0 e 1 — coluna direita, dividem a altura igualmente */}
+              <div className="flex flex-1 flex-col gap-1">
+                {[0, 1].map((idx) => {
+                  const photo = photos[idx];
+                  const isLoading = photoUploading && idx === photos.length;
+                  return (
+                    <div key={idx} className="relative flex-1 min-h-0 rounded-2xl overflow-hidden bg-muted/60 border border-border/40">
+                      {photo ? (
+                        <>
+                          <img src={photo.url} alt="" className="h-full w-full object-cover" />
+                          <button onClick={() => deleteExtraPhoto(photo.id, photo.url)}
+                            className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 backdrop-blur-sm text-white hover:bg-destructive/80 transition-colors">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </>
+                      ) : (
+                        <button onClick={() => p.photo_url && openSourcePicker("extra")}
+                          disabled={isLoading || !p.photo_url}
+                          className="flex h-full w-full items-center justify-center text-muted-foreground hover:text-primary transition-colors disabled:opacity-30">
+                          {isLoading ? <span className="text-[10px] animate-pulse">…</span> : <Plus className="h-5 w-5" />}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Linha inferior: slots extras 2 e 3 */}
+            <div className="grid grid-cols-2 gap-1">
+              {[2, 3].map((idx) => {
                 const photo = photos[idx];
                 const isLoading = photoUploading && idx === photos.length;
                 return (
@@ -340,15 +369,10 @@ function Me() {
                         </button>
                       </>
                     ) : (
-                      <button
-                        onClick={() => p.photo_url && openSourcePicker("extra")}
+                      <button onClick={() => p.photo_url && openSourcePicker("extra")}
                         disabled={isLoading || !p.photo_url}
-                        className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
-                      >
-                        {isLoading
-                          ? <span className="text-[10px] animate-pulse">…</span>
-                          : <Plus className="h-5 w-5" />
-                        }
+                        className="flex h-full w-full items-center justify-center text-muted-foreground hover:text-primary transition-colors disabled:opacity-30">
+                        {isLoading ? <span className="text-[10px] animate-pulse">…</span> : <Plus className="h-5 w-5" />}
                       </button>
                     )}
                   </div>
