@@ -91,9 +91,8 @@ function Me() {
 
       {/* ── Header rico ── */}
       <div className="relative h-60 overflow-hidden">
-        {/* Gradiente de fundo */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/25 to-background" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,hsl(var(--primary)/0.5),transparent)]" />
+        {/* Glow radial do topo, some naturalmente sem faixa */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_140%_90%_at_50%_-5%,hsl(var(--primary)/0.65),transparent_70%)]" />
 
         {/* Botões topo */}
         <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 pt-4">
