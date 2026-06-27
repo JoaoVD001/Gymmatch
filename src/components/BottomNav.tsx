@@ -12,44 +12,64 @@ export function BottomNav() {
     { to: "/me",       Icon: User },
   ];
 
+  const activeIndex = items.findIndex(({ to }) =>
+    loc.pathname === to || loc.pathname.startsWith(to + "/")
+  );
+
+  // cada item tem w-16 (64px), padding lateral px-3 (12px)
+  const ITEM_W = 64;
+  const PX = 12;
+  const centerX = PX + activeIndex * ITEM_W + ITEM_W / 2;
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-5 safe-bottom pointer-events-none">
-      <div className="pointer-events-auto flex items-center rounded-[28px] bg-card border border-border/40 px-3 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
-        {items.map(({ to, Icon }) => {
-          const active = loc.pathname === to || loc.pathname.startsWith(to + "/");
+      <div className="pointer-events-auto relative flex items-center rounded-[28px] bg-card border border-border/40 px-3 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
+
+        {/* Barra deslizante */}
+        <span
+          className="absolute top-0 h-[3px] w-8 rounded-full bg-primary pointer-events-none"
+          style={{
+            left: 0,
+            transform: `translateX(${centerX - 16}px)`,
+            transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            boxShadow: "0 0 10px 2px hsl(var(--primary) / 0.7)",
+          }}
+        />
+
+        {/* Cone de luz deslizante */}
+        <span
+          className="absolute top-0 h-full w-16 pointer-events-none bg-gradient-to-b from-primary/45 via-primary/10 to-transparent"
+          style={{
+            left: 0,
+            transform: `translateX(${centerX - 32}px)`,
+            transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            clipPath: "polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)",
+          }}
+        />
+
+        {items.map(({ to, Icon }, idx) => {
+          const active = idx === activeIndex;
           const isProfile = to === "/me";
 
           return (
             <Link
               key={to}
               to={to}
-              className="relative flex h-14 w-16 items-center justify-center"
+              className="relative z-10 flex h-14 w-16 items-center justify-center"
             >
-              {active && (
-                <>
-                  {/* Barra vermelha no topo */}
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_8px_2px_hsl(var(--primary))]" />
-                  {/* Cone de luz descendo */}
-                  <span
-                    className="absolute inset-0 pointer-events-none bg-gradient-to-b from-primary/50 via-primary/15 to-transparent"
-                    style={{ clipPath: "polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)" }}
-                  />
-                </>
-              )}
-
               {isProfile && profile?.photo_url ? (
                 <img
                   src={profile.photo_url}
                   alt=""
-                  className={`relative z-10 h-6 w-6 rounded-full object-cover transition-all duration-200 ${
+                  className={`h-6 w-6 rounded-full object-cover transition-all duration-300 ${
                     active
-                      ? "ring-2 ring-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]"
-                      : "ring-1 ring-white/20 opacity-50"
+                      ? "ring-2 ring-primary opacity-100"
+                      : "ring-1 ring-border opacity-50"
                   }`}
                 />
               ) : (
                 <Icon
-                  className={`relative z-10 transition-all duration-200 ${
+                  className={`transition-all duration-300 ${
                     active
                       ? "h-[22px] w-[22px] text-primary drop-shadow-[0_0_6px_hsl(var(--primary))]"
                       : "h-[20px] w-[20px] text-muted-foreground/50"
