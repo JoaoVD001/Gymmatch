@@ -30,12 +30,7 @@ export function BottomNav() {
                   {/* Barra vermelha no topo */}
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_8px_2px_hsl(var(--primary))]" />
                   {/* Cone de luz descendo */}
-                  <span
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-14 pointer-events-none"
-                    style={{
-                      background: "radial-gradient(ellipse 70% 100% at 50% 0%, hsl(var(--primary) / 0.55) 0%, hsl(var(--primary) / 0.15) 50%, transparent 80%)",
-                    }}
-                  />
+                  <span className="absolute inset-0 pointer-events-none bg-gradient-to-b from-primary/40 via-primary/10 to-transparent" />
                 </>
               )}
 
