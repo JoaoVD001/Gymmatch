@@ -7,15 +7,15 @@ export function BottomNav() {
   const { profile } = useAuth();
 
   const items = [
-    { to: "/discover", label: "Descobrir", Icon: Flame },
-    { to: "/matches",  label: "Matches",   Icon: MessageCircle },
-    { to: "/me",       label: "Perfil",    Icon: User },
+    { to: "/discover", Icon: Flame },
+    { to: "/matches",  Icon: MessageCircle },
+    { to: "/me",       Icon: User },
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-4 safe-bottom pointer-events-none">
-      <div className="pointer-events-auto flex items-center gap-1 rounded-[28px] border border-white/10 bg-background/80 backdrop-blur-2xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-        {items.map(({ to, label, Icon }) => {
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-5 safe-bottom pointer-events-none">
+      <div className="pointer-events-auto flex items-center rounded-[28px] bg-zinc-900 px-3 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+        {items.map(({ to, Icon }) => {
           const active = loc.pathname === to || loc.pathname.startsWith(to + "/");
           const isProfile = to === "/me";
 
@@ -23,39 +23,42 @@ export function BottomNav() {
             <Link
               key={to}
               to={to}
-              className="relative flex items-center gap-2 rounded-full px-4 py-2.5 transition-all duration-300"
-              style={active ? {
-                background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)",
-                boxShadow: "0 0 16px hsl(var(--primary) / 0.45)",
-              } : {}}
+              className="relative flex h-14 w-16 items-center justify-center"
             >
+              {active && (
+                <>
+                  {/* Barra vermelha no topo */}
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_8px_2px_hsl(var(--primary))]" />
+                  {/* Cone de luz descendo */}
+                  <span
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-14 pointer-events-none"
+                    style={{
+                      background: "radial-gradient(ellipse 60% 80% at 50% 0%, hsl(var(--primary) / 0.28) 0%, transparent 75%)",
+                    }}
+                  />
+                </>
+              )}
+
               {isProfile && profile?.photo_url ? (
                 <img
                   src={profile.photo_url}
                   alt=""
-                  className={`h-5 w-5 rounded-full object-cover transition-all duration-200 ${
-                    active ? "ring-1 ring-white/60" : "ring-1 ring-border"
+                  className={`relative z-10 h-6 w-6 rounded-full object-cover transition-all duration-200 ${
+                    active
+                      ? "ring-2 ring-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]"
+                      : "ring-1 ring-white/20 opacity-50"
                   }`}
                 />
               ) : (
                 <Icon
-                  className={`h-[18px] w-[18px] transition-colors duration-200 shrink-0 ${
-                    active ? "text-primary-foreground" : "text-muted-foreground"
+                  className={`relative z-10 transition-all duration-200 ${
+                    active
+                      ? "h-[22px] w-[22px] text-primary drop-shadow-[0_0_6px_hsl(var(--primary))]"
+                      : "h-[20px] w-[20px] text-white/30"
                   }`}
-                  strokeWidth={active ? 2.3 : 1.8}
+                  strokeWidth={active ? 2 : 1.5}
                 />
               )}
-
-              <span
-                className={`text-[13px] font-semibold leading-none transition-all duration-300 overflow-hidden ${
-                  active
-                    ? "max-w-[80px] opacity-100 text-primary-foreground"
-                    : "max-w-0 opacity-0"
-                }`}
-                style={{ whiteSpace: "nowrap" }}
-              >
-                {label}
-              </span>
             </Link>
           );
         })}
