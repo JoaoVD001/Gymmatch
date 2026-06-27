@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Flame, MessageCircle, User } from "lucide-react";
+import { Flame, MessageCircle, Dumbbell, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export function BottomNav() {
@@ -9,6 +9,7 @@ export function BottomNav() {
   const items = [
     { to: "/discover", Icon: Flame },
     { to: "/matches",  Icon: MessageCircle },
+    { to: "/treino",   Icon: Dumbbell },
     { to: "/me",       Icon: User },
   ];
 
