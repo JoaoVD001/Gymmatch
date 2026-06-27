@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Pencil, LogOut, Pause, Trash2, Crown, Shield, ChevronRight, Play } from "lucide-react";
+import { Pencil, LogOut, Pause, Trash2, Crown, Shield, ChevronRight, Play, Plus, Camera } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/me")({ component: Me });
 
@@ -141,18 +141,45 @@ function Me() {
           </div>
         )}
 
-        {/* Extra photos grid — estilo Instagram */}
-        {photos.length > 0 && (
-          <div className="mb-5 -mx-5">
-            <div className="grid grid-cols-3 gap-px bg-border/30">
-              {photos.map((photo) => (
-                <div key={photo.id} className="aspect-square overflow-hidden bg-muted">
-                  <img src={photo.url} alt="" className="h-full w-full object-cover" />
-                </div>
-              ))}
-            </div>
+        {/* Fotos */}
+        <div className="mb-5">
+          <div className="mb-2.5 flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-muted-foreground">Fotos</span>
+            <Link
+              to="/profile/edit"
+              className="flex items-center gap-1 rounded-full bg-card border border-border/60 px-3 py-1 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Camera className="h-3 w-3" /> Gerenciar
+            </Link>
           </div>
-        )}
+          <div className="grid grid-cols-3 gap-1.5">
+            {/* Foto principal */}
+            {p.photo_url && (
+              <div className="col-span-2 row-span-2 relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted">
+                <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-2 pb-2 pt-6">
+                  <span className="text-[10px] font-semibold text-white/80">Principal</span>
+                </div>
+              </div>
+            )}
+            {/* Fotos extras */}
+            {photos.slice(0, p.photo_url ? 4 : 6).map((photo) => (
+              <div key={photo.id} className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
+                <img src={photo.url} alt="" className="h-full w-full object-cover" />
+              </div>
+            ))}
+            {/* Slot de adicionar se tiver espaço */}
+            {(p.photo_url ? 1 : 0) + photos.length < 6 && (
+              <Link
+                to="/profile/edit"
+                className="aspect-square rounded-2xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                <span className="text-[10px] font-medium">Adicionar</span>
+              </Link>
+            )}
+          </div>
+        </div>
 
         {/* Menu */}
         <div className="space-y-1.5">
