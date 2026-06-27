@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Pencil, LogOut, Pause, Trash2, Crown, Shield, ChevronRight, Play, Plus, Camera } from "lucide-react";
+import { Settings, LogOut, Pause, Trash2, Crown, Shield, Plus, Camera, Play, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/me")({ component: Me });
 
@@ -48,6 +48,7 @@ function Me() {
   const [p, setP] = useState<Full | null>(null);
   const [photos, setPhotos] = useState<Array<{ id: string; url: string }>>([]);
   const [loading, setLoading] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const nav = useNavigate();
 
   useEffect(() => {
@@ -64,6 +65,7 @@ function Me() {
 
   async function setStatus(status: "active" | "paused" | "deleted") {
     if (!user) return;
+    setSettingsOpen(false);
     const { error } = await supabase.from("profiles").update({ status }).eq("id", user.id);
     if (error) return toast.error(error.message);
     await supabase.from("audit_logs").insert({ actor_id: user.id, action: `profile.${status}` });
@@ -87,52 +89,78 @@ function Me() {
   );
 
   const isPaused = p.status === "paused";
+  const totalPhotos = (p.photo_url ? 1 : 0) + photos.length;
 
   return (
     <div>
       {/* Hero */}
-      <div className="relative h-60 bg-muted overflow-hidden">
+      <div className="relative h-56 bg-muted overflow-hidden">
         {p.photo_url
           ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
           : <div className="h-full w-full bg-gradient-to-br from-muted to-card" />
         }
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
 
-        {/* Edit button */}
-        <Link
-          to="/profile/edit"
-          className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full bg-background/70 backdrop-blur px-3 py-1.5 text-xs font-semibold"
+        {/* Settings button */}
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="absolute top-4 right-4 grid h-9 w-9 place-items-center rounded-full bg-background/70 backdrop-blur text-foreground"
+          aria-label="Configurações"
         >
-          <Pencil className="h-3 w-3" /> Editar
-        </Link>
+          <Settings className="h-4 w-4" />
+        </button>
 
-        {/* Name + info */}
-        <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
-          <div className="flex items-end justify-between">
-            <div>
-              <h1 className="font-display text-2xl font-bold leading-tight">
-                {p.name ?? "—"}{p.age ? `, ${p.age}` : ""}
-              </h1>
-              {(p.training_level || p.goal) && (
-                <p className="mt-0.5 text-sm text-foreground/70">
-                  {p.training_level ? LEVEL_LABELS[p.training_level] : ""}
-                  {p.training_level && p.goal ? " · " : ""}
-                  {p.goal ? GOAL_LABELS[p.goal] : ""}
-                </p>
-              )}
-            </div>
-            <PlanBadge plan={p.plan} />
-          </div>
-        </div>
+        {isAdmin && (
+          <Link
+            to="/admin"
+            className="absolute top-4 left-4 grid h-9 w-9 place-items-center rounded-full bg-background/70 backdrop-blur text-blue-400"
+            aria-label="Admin"
+          >
+            <Shield className="h-4 w-4" />
+          </Link>
+        )}
       </div>
 
-      <div className="px-5 pt-4 pb-4">
-        {/* Bio */}
-        {p.bio && (
-          <p className="text-sm text-muted-foreground leading-relaxed mb-5">{p.bio}</p>
+      <div className="px-5 -mt-4">
+        {/* Nome + plano */}
+        <div className="flex items-end justify-between mb-1">
+          <h1 className="font-display text-2xl font-bold leading-tight">
+            {p.name ?? "—"}{p.age ? `, ${p.age}` : ""}
+          </h1>
+          <PlanBadge plan={p.plan} />
+        </div>
+
+        {/* Nível · Objetivo */}
+        {(p.training_level || p.goal) && (
+          <p className="text-sm text-muted-foreground mb-4">
+            {p.training_level ? LEVEL_LABELS[p.training_level] : ""}
+            {p.training_level && p.goal ? " · " : ""}
+            {p.goal ? GOAL_LABELS[p.goal] : ""}
+          </p>
         )}
 
-        {/* Modalities chips */}
+        {/* Botões de ação — estilo Instagram */}
+        <div className="flex gap-2 mb-5">
+          <Link
+            to="/profile/edit"
+            className="flex-1 rounded-xl border border-border bg-card py-2 text-center text-sm font-semibold hover:bg-accent transition-colors"
+          >
+            Editar perfil
+          </Link>
+          <Link
+            to="/premium"
+            className="flex-1 rounded-xl border border-border bg-card py-2 text-center text-sm font-semibold hover:bg-accent transition-colors flex items-center justify-center gap-1.5"
+          >
+            <Crown className="h-3.5 w-3.5 text-amber-400" /> Premium
+          </Link>
+        </div>
+
+        {/* Bio */}
+        {p.bio && (
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">{p.bio}</p>
+        )}
+
+        {/* Modalidades */}
         {p.modalities?.length > 0 && (
           <div className="mb-5 flex flex-wrap gap-1.5">
             {p.modalities.slice(0, 5).map((m) => (
@@ -141,10 +169,21 @@ function Me() {
           </div>
         )}
 
+        {/* Interesses */}
+        {p.interests?.length > 0 && (
+          <div className="mb-5 flex flex-wrap gap-1.5">
+            {p.interests.map((tag) => (
+              <span key={tag} className="rounded-full bg-accent px-3 py-1 text-xs">{tag}</span>
+            ))}
+          </div>
+        )}
+
         {/* Fotos */}
-        <div className="mb-5">
+        <div className="mb-6">
           <div className="mb-2.5 flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-muted-foreground">Fotos</span>
+            <span className="text-[13px] font-semibold text-muted-foreground">
+              Fotos <span className="font-normal">({totalPhotos}/6)</span>
+            </span>
             <Link
               to="/profile/edit"
               className="flex items-center gap-1 rounded-full bg-card border border-border/60 px-3 py-1 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -152,8 +191,8 @@ function Me() {
               <Camera className="h-3 w-3" /> Gerenciar
             </Link>
           </div>
+
           <div className="grid grid-cols-3 gap-1.5">
-            {/* Foto principal */}
             {p.photo_url && (
               <div className="col-span-2 row-span-2 relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted">
                 <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
@@ -162,14 +201,12 @@ function Me() {
                 </div>
               </div>
             )}
-            {/* Fotos extras */}
             {photos.slice(0, p.photo_url ? 4 : 6).map((photo) => (
               <div key={photo.id} className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
                 <img src={photo.url} alt="" className="h-full w-full object-cover" />
               </div>
             ))}
-            {/* Slot de adicionar se tiver espaço */}
-            {(p.photo_url ? 1 : 0) + photos.length < 6 && (
+            {totalPhotos < 6 && (
               <Link
                 to="/profile/edit"
                 className="aspect-square rounded-2xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
@@ -180,70 +217,62 @@ function Me() {
             )}
           </div>
         </div>
-
-        {/* Menu */}
-        <div className="space-y-1.5">
-          <MenuItem to="/premium" icon={<Crown className="h-4 w-4 text-amber-400" />} label="Ver Premium" />
-          {isAdmin && <MenuItem to="/admin" icon={<Shield className="h-4 w-4 text-blue-400" />} label="Painel administrativo" />}
-
-          <div className="my-3 h-px bg-border/50" />
-
-          <ActionItem
-            icon={isPaused
-              ? <Play className="h-4 w-4 text-green-400" />
-              : <Pause className="h-4 w-4 text-muted-foreground" />
-            }
-            label={isPaused ? "Reativar conta" : "Pausar conta"}
-            onClick={() => setStatus(isPaused ? "active" : "paused")}
-          />
-          <ActionItem
-            icon={<LogOut className="h-4 w-4 text-muted-foreground" />}
-            label="Sair"
-            onClick={signOut}
-          />
-
-          <div className="my-3 h-px bg-border/50" />
-
-          <ActionItem
-            icon={<Trash2 className="h-4 w-4 text-destructive" />}
-            label="Excluir conta"
-            danger
-            onClick={() => {
-              if (confirm("Excluir conta? Seus dados serão mantidos por conformidade.")) setStatus("deleted");
-            }}
-          />
-        </div>
       </div>
+
+      {/* Settings sheet */}
+      {settingsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm"
+          onClick={() => setSettingsOpen(false)}
+        >
+          <div
+            className="w-full rounded-t-3xl bg-card p-2 pb-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
+
+            <p className="px-5 pb-2 text-[13px] font-semibold text-muted-foreground">Configurações</p>
+
+            <button
+              onClick={() => { setSettingsOpen(false); setStatus(isPaused ? "active" : "paused"); }}
+              className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium hover:bg-accent transition-colors"
+            >
+              {isPaused
+                ? <Play className="h-5 w-5 text-green-400" />
+                : <Pause className="h-5 w-5 text-muted-foreground" />
+              }
+              {isPaused ? "Reativar conta" : "Pausar conta"}
+            </button>
+
+            <button
+              onClick={() => { setSettingsOpen(false); signOut(); }}
+              className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium hover:bg-accent transition-colors"
+            >
+              <LogOut className="h-5 w-5 text-muted-foreground" />
+              Sair
+            </button>
+
+            <div className="my-2 mx-5 h-px bg-border/50" />
+
+            <button
+              onClick={() => {
+                if (confirm("Excluir conta? Seus dados serão mantidos por conformidade.")) setStatus("deleted");
+              }}
+              className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <Trash2 className="h-5 w-5" />
+              Excluir conta
+            </button>
+
+            <button
+              onClick={() => setSettingsOpen(false)}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 py-3.5 text-[15px] font-semibold transition-colors"
+            >
+              <X className="h-4 w-4" /> Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
-  );
-}
-
-function MenuItem({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center gap-3 rounded-2xl bg-card/60 border border-border/60 px-4 py-3.5 hover:bg-card transition-colors"
-    >
-      <span className="shrink-0">{icon}</span>
-      <span className="flex-1 text-sm font-medium">{label}</span>
-      <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-    </Link>
-  );
-}
-
-function ActionItem({ icon, label, onClick, danger }: {
-  icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-2xl border border-border/60 px-4 py-3.5 text-left transition-colors ${
-        danger ? "bg-destructive/5 hover:bg-destructive/10 border-destructive/20" : "bg-card/60 hover:bg-card"
-      }`}
-    >
-      <span className="shrink-0">{icon}</span>
-      <span className={`flex-1 text-sm font-medium ${danger ? "text-destructive" : ""}`}>{label}</span>
-    </button>
   );
 }
