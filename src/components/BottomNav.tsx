@@ -23,33 +23,41 @@ export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-5 safe-bottom pointer-events-none">
       <style>{`
+        @keyframes bar-pop {
+          0%   { opacity: 0; transform: scaleX(0.2); }
+          60%  { transform: scaleX(1.15); }
+          100% { opacity: 1; transform: scaleX(1); }
+        }
         @keyframes beam-on {
           0%   { opacity: 0; transform: scaleY(0); }
-          60%  { opacity: 1; }
+          40%  { opacity: 0.6; }
           100% { opacity: 1; transform: scaleY(1); }
+        }
+        .bar-indicator {
+          transform-origin: center;
+          animation: bar-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
         .beam-cone {
           transform-origin: top center;
-          animation: beam-on 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: beam-on 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
       `}</style>
 
       <div className="pointer-events-auto relative flex items-center rounded-[28px] bg-card border border-border/40 px-3 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
 
-        {/* Barra — desliza suavemente */}
+        {/* Barra — pop rápido na nova posição */}
         <span
-          className="absolute top-0 h-[3px] w-8 rounded-full bg-primary pointer-events-none z-20"
+          key={`bar-${activeIndex}`}
+          className="bar-indicator absolute top-0 h-[3px] w-8 rounded-full bg-primary pointer-events-none z-20"
           style={{
-            left: 0,
-            transform: `translateX(${centerX - 16}px)`,
-            transition: "transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            left: `${centerX - 16}px`,
             boxShadow: "0 0 10px 2px hsl(var(--primary) / 0.7)",
           }}
         />
 
-        {/* Cone — acende na nova posição, sem slide */}
+        {/* Cone — acende devagar como luz real */}
         <span
-          key={activeIndex}
+          key={`cone-${activeIndex}`}
           className="beam-cone absolute top-0 h-full w-16 pointer-events-none bg-gradient-to-b from-primary/45 via-primary/10 to-transparent"
           style={{
             left: `${centerX - 32}px`,
