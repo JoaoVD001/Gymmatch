@@ -14,7 +14,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-5 safe-bottom pointer-events-none">
-      <div className="pointer-events-auto flex items-center rounded-[28px] bg-zinc-900 px-3 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+      <div className="pointer-events-auto flex items-center rounded-[28px] bg-card border border-border/40 px-3 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
         {items.map(({ to, Icon }) => {
           const active = loc.pathname === to || loc.pathname.startsWith(to + "/");
           const isProfile = to === "/me";
@@ -31,9 +31,9 @@ export function BottomNav() {
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_8px_2px_hsl(var(--primary))]" />
                   {/* Cone de luz descendo */}
                   <span
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-14 pointer-events-none"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-14 pointer-events-none"
                     style={{
-                      background: "radial-gradient(ellipse 60% 80% at 50% 0%, hsl(var(--primary) / 0.28) 0%, transparent 75%)",
+                      background: "radial-gradient(ellipse 70% 100% at 50% 0%, hsl(var(--primary) / 0.55) 0%, hsl(var(--primary) / 0.15) 50%, transparent 80%)",
                     }}
                   />
                 </>
@@ -54,7 +54,7 @@ export function BottomNav() {
                   className={`relative z-10 transition-all duration-200 ${
                     active
                       ? "h-[22px] w-[22px] text-primary drop-shadow-[0_0_6px_hsl(var(--primary))]"
-                      : "h-[20px] w-[20px] text-white/30"
+                      : "h-[20px] w-[20px] text-muted-foreground/50"
                   }`}
                   strokeWidth={active ? 2 : 1.5}
                 />
