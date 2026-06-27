@@ -35,6 +35,7 @@
 - [x] Stripe Checkout integrado via fetch direto na REST API (sem SDK)
 - [x] Ativação automática do plano após pagamento
 - [x] Enforcement de limites: likes, matches, imagens, desfazer
+- [x] Popup de upgrade (`UpgradeModal`) — ao atingir qualquer limite aparece modal com os dois planos, X para fechar, botão vai direto para o checkout
 - [x] "Quem curtiu você" bloqueado/limitado por plano
 - [x] Tela de sucesso pós-pagamento
 
