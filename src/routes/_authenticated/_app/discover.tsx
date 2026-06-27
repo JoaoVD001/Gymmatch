@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Heart, X, Dumbbell, MapPin, Zap, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { hasUsedSwipe, markSwipeUsed } from "@/lib/lucia";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 export const Route = createFileRoute("/_authenticated/_app/discover")({ component: Discover });
 
@@ -48,6 +49,7 @@ function Discover() {
   const [i, setI] = useState(0);
   const [loading, setLoading] = useState(true);
   const lastLikedRef = useRef<{ id: string; index: number } | null>(null);
+  const [upgradeReason, setUpgradeReason] = useState<"daily_limit" | "match_limit" | "undo" | "images" | null>(null);
 
   // Swipe state
   const startXRef = useRef(0);
@@ -153,15 +155,11 @@ function Discover() {
     const data = rpcData as { blocked?: boolean; reason?: string; matched?: boolean; match_id?: string } | null;
     if (error) { toast.error(error.message); return; }
     if (data?.blocked && data?.reason === "daily_limit_reached") {
-      toast.error("Limite diário de curtidas atingido. Assine Gold para curtidas ilimitadas.", {
-        action: { label: "Ver planos", onClick: () => nav({ to: "/premium" }) },
-      });
+      setUpgradeReason("daily_limit");
       return;
     }
     if (data?.blocked && data?.reason === "limit_reached") {
-      toast.error("Limite de matches atingido no seu plano.", {
-        action: { label: "Ver planos", onClick: () => nav({ to: "/premium" }) },
-      });
+      setUpgradeReason("match_limit");
       return;
     }
     if (isLike) lastLikedRef.current = { id: target.id, index: i };
@@ -185,9 +183,7 @@ function Discover() {
   async function undo() {
     const plan = profile?.plan ?? "free";
     if (plan === "free") {
-      toast.error("Desfazer curtida é exclusivo para Gold e Diamond.", {
-        action: { label: "Ver planos", onClick: () => nav({ to: "/premium" }) },
-      });
+      setUpgradeReason("undo");
       return;
     }
     if (!user || !lastLikedRef.current) return;
@@ -234,6 +230,8 @@ function Discover() {
   if (loading) return <Loader />;
   if (!profile?.gym_id) return <Empty title="Nenhuma academia selecionada." body="Adicione uma academia no seu perfil para ver membros." />;
 
+  const upgradeOpen = upgradeReason !== null;
+
   const card = cards[i];
   if (!card) return (
     <div className="px-4 pt-6">
@@ -271,6 +269,11 @@ function Discover() {
 
   return (
     <div className="px-4 pt-6">
+      <UpgradeModal
+        open={upgradeOpen}
+        reason={upgradeReason ?? "daily_limit"}
+        onClose={() => setUpgradeReason(null)}
+      />
       <Header />
 
       {/* Card stack */}

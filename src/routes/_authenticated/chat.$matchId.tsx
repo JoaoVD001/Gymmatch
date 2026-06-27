@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { ArrowLeft, Send, Flag, Ban, ImagePlus, Lock } from "lucide-react";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 export const Route = createFileRoute("/_authenticated/chat/$matchId")({ component: Chat });
 
@@ -18,6 +19,7 @@ function Chat() {
   const [other, setOther] = useState<{ id: string; name: string | null; photo_url: string | null } | null>(null);
   const [matchActive, setMatchActive] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ function Chat() {
 
   async function sendImage(file: File) {
     if (!user) return;
-    if (profile?.plan !== "gold" && profile?.plan !== "diamond") { toast.error("Envio de imagens é exclusivo para Gold e Diamond"); return; }
+    if (profile?.plan !== "gold" && profile?.plan !== "diamond") { setShowUpgrade(true); return; }
     const ext = file.name.split(".").pop() ?? "jpg";
     const path = `${user.id}/${matchId}/${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage.from("chat-media").upload(path, file);
@@ -82,6 +84,7 @@ function Chat() {
 
   return (
     <div className="mx-auto flex h-screen max-w-md flex-col">
+      <UpgradeModal open={showUpgrade} reason="images" onClose={() => setShowUpgrade(false)} />
       <header className="flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <button onClick={() => nav({ to: "/matches" })}><ArrowLeft className="h-5 w-5" /></button>
         <div className="h-10 w-10 overflow-hidden rounded-full bg-muted">
@@ -141,9 +144,7 @@ function Chat() {
           ) : (
             <button
               type="button"
-              onClick={() => toast.error("Envio de imagens é exclusivo para Gold e Diamond.", {
-                action: { label: "Ver planos", onClick: () => nav({ to: "/premium" }) },
-              })}
+              onClick={() => setShowUpgrade(true)}
               className="relative rounded-full p-2 hover:bg-accent"
             >
               <ImagePlus className="h-5 w-5 text-muted-foreground/40" />
