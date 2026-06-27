@@ -246,23 +246,41 @@ function Me() {
       {/* ══════════════════════════════════════
           AÇÕES
       ══════════════════════════════════════ */}
-      <div className="px-4 pt-4 pb-2 flex items-center gap-2.5">
-        <Link to="/profile/edit" className="flex-1 rounded-2xl bg-primary py-2.5 text-center text-sm font-bold text-primary-foreground shadow-md active:scale-95 active:brightness-90 transition-all">
+      <div className="px-4 pt-4 pb-3 space-y-2">
+        <Link
+          to="/profile/edit"
+          className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-primary to-primary/80 py-3 text-sm font-bold text-white shadow-lg active:scale-[0.97] transition-all"
+          style={{ boxShadow: "0 4px 20px hsl(var(--primary) / 0.35)" }}
+        >
           Editar perfil
         </Link>
-        <Link to="/premium" className="grid h-[42px] w-[42px] place-items-center rounded-2xl border border-amber-400/35 bg-amber-400/10 text-amber-400 active:scale-95 transition-all">
-          <Crown className="h-4 w-4" />
-        </Link>
+
+        {p.plan === "free" && (
+          <Link
+            to="/premium"
+            className="flex w-full items-center justify-between rounded-2xl border border-amber-400/25 bg-amber-400/8 px-4 py-2.5 active:scale-[0.98] transition-all"
+          >
+            <div className="flex items-center gap-2">
+              <Crown className="h-4 w-4 text-amber-400" />
+              <span className="text-sm font-semibold text-amber-400">Fazer upgrade para Premium</span>
+            </div>
+            <span className="text-xs text-amber-400/60">Ver planos →</span>
+          </Link>
+        )}
       </div>
 
       {/* ══════════════════════════════════════
           ABAS
       ══════════════════════════════════════ */}
-      <div className="px-4 pb-3 pt-1 flex gap-1.5 border-b border-border/40">
+      <div className="flex border-b border-border/40">
         {(["galeria", "info"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold capitalize transition-colors ${
-              tab === t ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-all ${
+              tab === t
+                ? "text-foreground border-b-2 border-primary -mb-px"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t === "galeria" ? <Grid2x2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
