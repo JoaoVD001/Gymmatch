@@ -48,7 +48,7 @@
 - [x] Bottom nav: efeito spotlight — barra faz "pop" rápido (0.3s scaleX) na nova posição, cone acende devagar (0.7s scaleY) como luz real
 - [x] Discover: pilha de cards, tint verde/vermelho ao arrastar, badges CURTIR/NOPE com glow
 - [x] Perfil (`/me`): layout estilo Instagram — botões em linha, engrenagem abre sheet de configurações
-- [x] Fotos: grade unificada estilo Tinder na tela de edição (foto principal 2×2 + extras), upload direto sem bottom sheet
+- [x] Fotos: grid estilo Tinder movido para aba Galeria do perfil (foto principal 2×2 + 4 extras); ao clicar em slot vazio abre popup "Câmera / Galeria"; profile.edit só tem dados do formulário
 - [x] Perfil (`/me`): redesign v3 — estrutura fiel à referência: header h-64 com gradiente sólido primary→escuro, avatar+nome ancorados no rodapé do header, ícone lápis de edição, botão "Editar perfil" em destaque + Crown para premium, abas Galeria/Info com borda separadora
 
 ---
