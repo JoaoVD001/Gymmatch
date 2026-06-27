@@ -49,7 +49,7 @@
 - [x] Discover: pilha de cards, tint verde/vermelho ao arrastar, badges CURTIR/NOPE com glow
 - [x] Perfil (`/me`): layout estilo Instagram — botões em linha, engrenagem abre sheet de configurações
 - [x] Fotos: grade unificada estilo Tinder na tela de edição (foto principal 2×2 + extras), upload direto sem bottom sheet
-- [x] Perfil (`/me`): avatar circular separado da galeria — foto de perfil como círculo com anel, galeria de extras em seção própria abaixo
+- [x] Perfil (`/me`): redesign v2 — header alto com gradiente rico + radial glow, avatar e nome dentro do header, abas Galeria/Info, botão "Editar perfil" em destaque
 
 ---
 
