@@ -90,9 +90,10 @@ function Me() {
     <div className="pb-28">
 
       {/* ── Header rico ── */}
-      <div className="relative h-60 overflow-hidden">
-        {/* Glow radial do topo, some naturalmente sem faixa */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_140%_90%_at_50%_-5%,hsl(var(--primary)/0.65),transparent_70%)]" />
+      <div
+        className="relative h-60 overflow-hidden"
+        style={{ background: "linear-gradient(to bottom, oklch(0.68 0.21 22) 0%, oklch(0.22 0.07 22) 55%, oklch(0.12 0.02 22) 100%)" }}
+      >
 
         {/* Botões topo */}
         <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 pt-4">
