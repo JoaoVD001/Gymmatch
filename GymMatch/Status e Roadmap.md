@@ -49,7 +49,7 @@
 - [x] Discover: pilha de cards, tint verde/vermelho ao arrastar, badges CURTIR/NOPE com glow
 - [x] Perfil (`/me`): layout estilo Instagram — botões em linha, engrenagem abre sheet de configurações
 - [x] Fotos: grid estilo Tinder movido para aba Galeria do perfil (foto principal 2×2 + 4 extras); ao clicar em slot vazio abre popup "Câmera / Galeria"; profile.edit só tem dados do formulário
-- [x] Perfil (`/me`): redesign v4 — header h-44 com gradiente, profile card flutuante (-mt-8) com avatar+nome+botões, tabs com pill seletor, grid de fotos interativo com popup Câmera/Galeria
+- [x] Perfil (`/me`): redesign v5 — fundo radial wine/maroon `#6b0035→#0f0008`, profile card glassmorphism `rgba(30,0,20,0.82)`, botão "Editar perfil" pink gradient `#e8005a`, tabs pill branco, grid masonry 2 colunas com fotos reais
 
 ---
 

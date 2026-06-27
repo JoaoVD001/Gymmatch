@@ -5,8 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   Settings, LogOut, Pause, Trash2, Crown, Shield,
-  Camera, Play, X, Gem, Grid2x2, Info, PencilLine,
-  Star, ImageIcon, Plus, Share2,
+  Camera, Play, X, Gem, Info, PencilLine,
+  ImageIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/me")({ component: Me });
@@ -19,14 +19,10 @@ type Full = {
 };
 
 const GOAL_LABELS: Record<string, string> = {
-  friends: "Amizade",
-  training_partner: "Parceiro de treino",
-  romance: "Romance",
+  friends: "Amizade", training_partner: "Parceiro de treino", romance: "Romance",
 };
 const LEVEL_LABELS: Record<string, string> = {
-  beginner: "Iniciante",
-  intermediate: "Intermediário",
-  advanced: "Avançado",
+  beginner: "Iniciante", intermediate: "Intermediário", advanced: "Avançado",
 };
 
 function Me() {
@@ -43,7 +39,6 @@ function Me() {
   const [pendingSlot, setPendingSlot] = useState<"main" | "extra" | null>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef  = useRef<HTMLInputElement>(null);
-
   const nav = useNavigate();
 
   useEffect(() => {
@@ -94,12 +89,11 @@ function Me() {
     if (error) return toast.error(error.message);
     setP((prev) => prev ? { ...prev, photo_url: null } : prev);
     await refreshProfile();
-    toast.success("Foto removida");
   }
 
   async function uploadExtraPhoto(file: File) {
     if (!user) return;
-    if (photos.length >= 5) { toast.error("Máximo de 5 fotos"); return; }
+    if (photos.length >= 6) { toast.error("Máximo de 6 fotos"); return; }
     if (file.size > 10 * 1024 * 1024) { toast.error("Máximo 10 MB"); return; }
     setPhotoUploading(true);
     try {
@@ -115,7 +109,6 @@ function Me() {
         .select("id,url,position").single();
       if (error) { toast.error(error.message); return; }
       setPhotos((prev) => [...prev, inserted as { id: string; url: string; position: number }]);
-      toast.success("Foto adicionada");
     } catch (e) {
       toast.error((e as Error)?.message ?? "Erro ao enviar");
     } finally { setPhotoUploading(false); }
@@ -124,13 +117,11 @@ function Me() {
   async function deleteExtraPhoto(id: string, url: string) {
     if (!user) return;
     const marker = "/avatars/";
-    const markerIndex = url.indexOf(marker);
+    const idx = url.indexOf(marker);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from as any)("user_photos").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    if (markerIndex !== -1) {
-      await supabase.storage.from("avatars").remove([decodeURIComponent(url.slice(markerIndex + marker.length))]);
-    }
+    if (idx !== -1) await supabase.storage.from("avatars").remove([decodeURIComponent(url.slice(idx + marker.length))]);
     setPhotos((prev) => prev.filter((ph) => ph.id !== id));
   }
 
@@ -141,25 +132,21 @@ function Me() {
 
   function handleFileInput(source: "gallery" | "camera") {
     setSourcePickerOpen(false);
-    setTimeout(() => {
-      if (source === "camera") cameraRef.current?.click();
-      else galleryRef.current?.click();
-    }, 150);
+    setTimeout(() => { if (source === "camera") cameraRef.current?.click(); else galleryRef.current?.click(); }, 150);
   }
 
   function onFileSelected(file: File) {
-    if (pendingSlot === "main") uploadMainPhoto(file);
-    else uploadExtraPhoto(file);
+    if (pendingSlot === "main") uploadMainPhoto(file); else uploadExtraPhoto(file);
     setPendingSlot(null);
   }
 
-  if (loading) return <div className="grid min-h-[60vh] place-items-center text-muted-foreground">Carregando...</div>;
+  if (loading) return <div className="grid min-h-screen place-items-center" style={{ background: "radial-gradient(ellipse at 50% 30%, oklch(0.20 0.012 280) 0%, oklch(0.13 0.01 280) 55%, oklch(0.09 0.008 280) 100%)" }}><span className="text-white/40 text-sm">Carregando...</span></div>;
 
   if (!p) return (
-    <div className="grid min-h-[60vh] place-items-center px-6 text-center">
+    <div className="grid min-h-screen place-items-center px-6 text-center" style={{ background: "radial-gradient(ellipse at 50% 30%, oklch(0.20 0.012 280) 0%, oklch(0.13 0.01 280) 55%, oklch(0.09 0.008 280) 100%)" }}>
       <div className="space-y-4">
-        <p className="text-muted-foreground">Não foi possível carregar o perfil.</p>
-        <button onClick={signOut} className="rounded-2xl bg-card border border-border px-6 py-2.5 text-sm font-medium">Sair</button>
+        <p className="text-white/40">Não foi possível carregar o perfil.</p>
+        <button onClick={signOut} className="rounded-2xl border border-white/10 bg-white/8 px-6 py-2.5 text-sm font-medium text-white">Sair</button>
       </div>
     </div>
   );
@@ -169,78 +156,65 @@ function Me() {
     p.training_level ? LEVEL_LABELS[p.training_level] : null,
     p.goal ? GOAL_LABELS[p.goal] : null,
   ].filter(Boolean).join(" · ");
-  const totalPhotos = (p.photo_url ? 1 : 0) + photos.length;
 
   return (
-    <div className="pb-28">
-
+    <div
+      className="min-h-screen pb-32"
+      style={{ background: "radial-gradient(ellipse at 50% 30%, oklch(0.20 0.012 280) 0%, oklch(0.13 0.01 280) 55%, oklch(0.09 0.008 280) 100%)" }}
+    >
       {/* ── Hidden inputs ── */}
-      <input ref={galleryRef} type="file" accept="image/*" hidden
-        onChange={(e) => { if (e.target.files?.[0]) onFileSelected(e.target.files[0]); e.target.value = ""; }} />
-      <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden
-        onChange={(e) => { if (e.target.files?.[0]) onFileSelected(e.target.files[0]); e.target.value = ""; }} />
+      <input ref={galleryRef} type="file" accept="image/*" hidden onChange={(e) => { if (e.target.files?.[0]) onFileSelected(e.target.files[0]); e.target.value = ""; }} />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { if (e.target.files?.[0]) onFileSelected(e.target.files[0]); e.target.value = ""; }} />
 
       {/* ══════════════════════════════════════
-          GRADIENT HEADER
+          HEADER BAR
       ══════════════════════════════════════ */}
-      <div
-        className="relative h-44"
-        style={{ background: "linear-gradient(to bottom, oklch(0.68 0.21 22) 0%, oklch(0.22 0.07 22) 60%, oklch(0.12 0.02 22) 100%)" }}
-      >
-        <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 pt-5">
-          {isAdmin ? (
-            <Link to="/admin" className="grid h-10 w-10 place-items-center rounded-full bg-black/30 backdrop-blur-sm text-white/90 border border-white/10">
-              <Shield className="h-4 w-4" />
-            </Link>
-          ) : <div className="h-10 w-10" />}
+      <div className="flex items-center justify-between px-4 pt-12 pb-4">
+        {isAdmin ? (
+          <Link to="/admin" className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-white/70" style={{ background: "rgba(0,0,0,0.35)" }}>
+            <Shield className="h-4 w-4" />
+          </Link>
+        ) : <div className="h-10 w-10" />}
 
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="grid h-10 w-10 place-items-center rounded-full bg-black/30 backdrop-blur-sm text-white/90 border border-white/10"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
-        </div>
+        <button onClick={() => setSettingsOpen(true)} className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-white/70" style={{ background: "rgba(0,0,0,0.35)" }}>
+          <Settings className="h-4 w-4" />
+        </button>
       </div>
 
       {/* ══════════════════════════════════════
-          PROFILE CARD — overlaps header
+          PROFILE CARD
       ══════════════════════════════════════ */}
-      <div className="-mt-8 mx-3">
-        <div className="rounded-3xl border border-white/6 bg-card/95 p-5 shadow-2xl backdrop-blur-sm">
+      <div className="mx-4 rounded-[24px] overflow-hidden" style={{ background: "oklch(0.17 0.012 280 / 0.9)", border: "1px solid oklch(0.25 0.015 280 / 0.5)", backdropFilter: "blur(12px)" }}>
+        <div className="p-5">
 
-          {/* Avatar + nome */}
+          {/* Avatar + Info */}
           <div className="flex items-center gap-4 mb-5">
             <div className="relative shrink-0">
               <button
                 onClick={() => openSourcePicker("main")}
-                className="block h-[76px] w-[76px] rounded-full overflow-hidden bg-muted ring-2 ring-white/10 shadow-lg"
+                className="block h-20 w-20 rounded-full overflow-hidden ring-2 ring-white/15 shadow-xl"
+                style={{ background: "rgba(0,0,0,0.4)" }}
               >
                 {p.photo_url
                   ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
-                  : <div className="grid h-full w-full place-items-center bg-muted">
-                      <Camera className="h-7 w-7 text-muted-foreground" />
-                    </div>
+                  : <div className="grid h-full w-full place-items-center"><Camera className="h-7 w-7 text-white/30" /></div>
                 }
-                {uploading && (
-                  <div className="absolute inset-0 rounded-full bg-black/50 grid place-items-center">
-                    <span className="text-[10px] text-white animate-pulse">...</span>
-                  </div>
-                )}
+                {uploading && <div className="absolute inset-0 rounded-full bg-black/60 grid place-items-center"><span className="text-[10px] text-white animate-pulse">...</span></div>}
               </button>
-              <Link
-                to="/profile/edit"
-                className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-xl border border-border/50 bg-card shadow-md"
+              <button
+                onClick={() => openSourcePicker("main")}
+                className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-xl border border-white/10 shadow-lg"
+                style={{ background: "oklch(0.13 0.05 22 / 0.95)" }}
               >
-                <PencilLine className="h-3.5 w-3.5 text-foreground/80" />
-              </Link>
+                <PencilLine className="h-3.5 w-3.5 text-white/70" />
+              </button>
             </div>
 
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-bold leading-tight truncate">
+              <p className="text-[22px] font-bold text-white leading-tight truncate">
                 {p.name ?? "—"}{p.age ? `, ${p.age}` : ""}
-              </h1>
-              {subtitle && <p className="text-sm text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
+              </p>
+              {subtitle && <p className="text-sm mt-0.5 truncate" style={{ color: "#9e7a8a" }}>{subtitle}</p>}
               {p.plan === "diamond" && (
                 <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-2 py-0.5 text-[11px] font-bold text-white">
                   <Gem className="h-2.5 w-2.5" /> Diamond
@@ -254,26 +228,21 @@ function Me() {
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-2">
+          {/* Action row */}
+          <div className="flex items-center gap-2.5">
             <Link
               to="/profile/edit"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/6 py-2.5 text-sm font-semibold text-foreground active:scale-[0.97] transition-all"
+              className="flex flex-1 items-center justify-center rounded-[14px] py-3 text-[15px] font-semibold text-white active:scale-[0.97] transition-all bg-primary shadow-glow"
             >
-              <PencilLine className="h-3.5 w-3.5" /> Editar perfil
+              Editar perfil
             </Link>
             <Link
               to="/premium"
-              className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-2xl border border-amber-400/30 bg-amber-400/10 text-amber-400 active:scale-95 transition-all"
+              className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-[14px] border active:scale-95 transition-all"
+              style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.35)" }}
             >
-              <Crown className="h-4 w-4" />
+              <Crown className="h-4.5 w-4.5 text-amber-400" />
             </Link>
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/6 text-muted-foreground active:scale-95 transition-all"
-            >
-              <Share2 className="h-4 w-4" />
-            </button>
           </div>
         </div>
       </div>
@@ -281,126 +250,102 @@ function Me() {
       {/* ══════════════════════════════════════
           TAB BAR
       ══════════════════════════════════════ */}
-      <div className="mt-4 mx-3 flex items-center justify-between">
-        <div className="flex items-center gap-1 rounded-full bg-white/6 p-1 border border-white/8">
-          {(["galeria", "info"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
-                tab === t
-                  ? "bg-foreground text-background shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t === "galeria" ? <Grid2x2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
-              {t === "galeria" ? "Galeria" : "Info"}
-            </button>
-          ))}
+      <div className="mx-4 mt-4 flex items-center justify-between pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setTab("galeria")}
+            className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
+            style={tab === "galeria" ? { background: "#ffffff", color: "#0f0008" } : { color: "rgba(255,255,255,0.45)" }}
+          >
+            Galeria
+          </button>
+          <button
+            onClick={() => setTab("info")}
+            className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
+            style={tab === "info" ? { background: "#ffffff", color: "#0f0008" } : { color: "rgba(255,255,255,0.45)" }}
+          >
+            Info
+          </button>
         </div>
 
-        <span className="text-xs text-muted-foreground">
-          {totalPhotos}/6 fotos
-        </span>
       </div>
 
       {/* ══════════════════════════════════════
           CONTEÚDO
       ══════════════════════════════════════ */}
-      <div className="mt-3 px-3">
+      <div className="mt-3 px-4">
 
         {/* ── Galeria ── */}
         {tab === "galeria" && (
-          <div>
-            {/* Linha superior: foto principal + 2 extras */}
-            <div className="flex gap-1.5 mb-1.5">
-              <div className="relative rounded-2xl overflow-hidden bg-muted/60" style={{ flex: 2, aspectRatio: "4/5" }}>
-                {p.photo_url ? (
-                  <>
-                    <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
-                    <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 backdrop-blur-sm">
-                      <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                      <span className="text-[10px] font-semibold text-white">Principal</span>
-                    </div>
-                    <button onClick={() => openSourcePicker("main")}
-                      className="absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-black/55 backdrop-blur-sm text-white">
-                      <Camera className="h-3.5 w-3.5" />
-                    </button>
-                    <button onClick={removeMainPhoto}
-                      className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full bg-black/55 backdrop-blur-sm text-white">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </>
-                ) : (
-                  <button onClick={() => openSourcePicker("main")} disabled={uploading}
-                    className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50">
-                    <div className="grid h-11 w-11 place-items-center rounded-full bg-primary/10">
-                      <Camera className="h-5 w-5 text-primary" />
-                    </div>
-                    <span className="text-xs font-medium">Foto principal</span>
+          <div className="space-y-1.5">
+            {/* Contador */}
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium text-white/30">Fotos</span>
+              <span className="text-xs font-medium text-white/30">{photos.length}/6</span>
+            </div>
+
+            {/* Linha 1: foto grande + 2 empilhadas */}
+            <div className="grid grid-cols-2 gap-1.5" style={{ gridTemplateRows: "1fr 1fr" }}>
+              {/* Slot 1 — grande */}
+              {photos[0] ? (
+                <div className="relative row-span-2 overflow-hidden rounded-xl" style={{ minHeight: "260px" }}>
+                  <img src={photos[0].url} alt="" className="h-full w-full object-cover" />
+                  <button onClick={() => deleteExtraPhoto(photos[0].id, photos[0].url)} className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full text-white transition-all active:scale-90" style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                   </button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <button onClick={() => openSourcePicker("extra")} className="row-span-2 flex items-center justify-center rounded-xl" style={{ minHeight: "260px", background: "rgba(255,255,255,0.04)", border: "1.5px dashed rgba(255,255,255,0.12)" }}>
+                  <span className="text-3xl font-light" style={{ color: "rgba(255,255,255,0.2)" }}>+</span>
+                </button>
+              )}
 
-              <div className="flex flex-1 flex-col gap-1.5">
-                {[0, 1].map((idx) => {
-                  const photo = photos[idx];
-                  const isLoading = photoUploading && idx === photos.length;
-                  return (
-                    <div key={idx} className="relative flex-1 min-h-0 rounded-2xl overflow-hidden bg-muted/60">
-                      {photo ? (
-                        <>
-                          <img src={photo.url} alt="" className="h-full w-full object-cover" />
-                          <button onClick={() => deleteExtraPhoto(photo.id, photo.url)}
-                            className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-black/55 text-white">
-                            <X className="h-3 w-3" />
-                          </button>
-                        </>
-                      ) : (
-                        <button onClick={() => p.photo_url && openSourcePicker("extra")}
-                          disabled={isLoading || !p.photo_url}
-                          className="flex h-full w-full items-center justify-center text-muted-foreground hover:text-primary transition-colors disabled:opacity-30">
-                          {isLoading ? <span className="text-[10px] animate-pulse">…</span> : <Plus className="h-5 w-5" />}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Slot 2 */}
+              {photos[1] ? (
+                <div className="relative overflow-hidden rounded-xl aspect-square">
+                  <img src={photos[1].url} alt="" className="h-full w-full object-cover" />
+                  <button onClick={() => deleteExtraPhoto(photos[1].id, photos[1].url)} className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full text-white transition-all active:scale-90" style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => openSourcePicker("extra")} className="flex items-center justify-center rounded-xl aspect-square" style={{ background: "rgba(255,255,255,0.04)", border: "1.5px dashed rgba(255,255,255,0.12)" }}>
+                  <span className="text-2xl font-light" style={{ color: "rgba(255,255,255,0.2)" }}>+</span>
+                </button>
+              )}
+
+              {/* Slot 3 */}
+              {photos[2] ? (
+                <div className="relative overflow-hidden rounded-xl aspect-square">
+                  <img src={photos[2].url} alt="" className="h-full w-full object-cover" />
+                  <button onClick={() => deleteExtraPhoto(photos[2].id, photos[2].url)} className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full text-white transition-all active:scale-90" style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => openSourcePicker("extra")} className="flex items-center justify-center rounded-xl aspect-square" style={{ background: "rgba(255,255,255,0.04)", border: "1.5px dashed rgba(255,255,255,0.12)" }}>
+                  <span className="text-2xl font-light" style={{ color: "rgba(255,255,255,0.2)" }}>+</span>
+                </button>
+              )}
             </div>
 
-            {/* Linha inferior: 2 extras */}
-            <div className="grid grid-cols-2 gap-1.5">
-              {[2, 3].map((idx) => {
-                const photo = photos[idx];
-                const isLoading = photoUploading && idx === photos.length;
-                return (
-                  <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden bg-muted/60">
-                    {photo ? (
-                      <>
-                        <img src={photo.url} alt="" className="h-full w-full object-cover" />
-                        <button onClick={() => deleteExtraPhoto(photo.id, photo.url)}
-                          className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-black/55 text-white">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </>
-                    ) : (
-                      <button onClick={() => p.photo_url && openSourcePicker("extra")}
-                        disabled={isLoading || !p.photo_url}
-                        className="flex h-full w-full items-center justify-center text-muted-foreground hover:text-primary transition-colors disabled:opacity-30">
-                        {isLoading ? <span className="text-[10px] animate-pulse">…</span> : <Plus className="h-5 w-5" />}
-                      </button>
-                    )}
+            {/* Linha 2: slots 4, 5, 6 */}
+            <div className="grid grid-cols-3 gap-1.5">
+              {[3, 4, 5].map((idx) => (
+                photos[idx] ? (
+                  <div key={photos[idx].id} className="relative overflow-hidden rounded-xl aspect-square">
+                    <img src={photos[idx].url} alt="" className="h-full w-full object-cover" />
+                    <button onClick={() => deleteExtraPhoto(photos[idx].id, photos[idx].url)} className="absolute top-1.5 right-1.5 grid h-6 w-6 place-items-center rounded-full text-white transition-all active:scale-90" style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                      <X className="h-3 w-3" strokeWidth={2.5} />
+                    </button>
                   </div>
-                );
-              })}
+                ) : (
+                  <button key={idx} onClick={() => openSourcePicker("extra")} className="flex items-center justify-center rounded-xl aspect-square" style={{ background: "rgba(255,255,255,0.04)", border: "1.5px dashed rgba(255,255,255,0.12)" }}>
+                    <span className="text-xl font-light" style={{ color: "rgba(255,255,255,0.2)" }}>+</span>
+                  </button>
+                )
+              ))}
             </div>
-
-            {!p.photo_url && (
-              <p className="mt-3 text-center text-xs text-muted-foreground">
-                Adicione a foto principal para aparecer no Descobrir.
-              </p>
-            )}
           </div>
         )}
 
@@ -409,44 +354,48 @@ function Me() {
           <div className="space-y-5">
             {p.bio && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Sobre</p>
-                <p className="text-sm text-foreground/80 leading-relaxed">{p.bio}</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9e7a8a" }}>Sobre</p>
+                <p className="text-sm leading-relaxed text-white/70">{p.bio}</p>
               </div>
             )}
             {p.modalities?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Modalidades</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9e7a8a" }}>Modalidades</p>
                 <div className="flex flex-wrap gap-1.5">
                   {p.modalities.map((m) => (
-                    <span key={m} className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">{m}</span>
+                    <span key={m} className="rounded-full px-3 py-1 text-xs text-white/60" style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)" }}>{m}</span>
                   ))}
                 </div>
               </div>
             )}
             {p.interests?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Interesses</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9e7a8a" }}>Interesses</p>
                 <div className="flex flex-wrap gap-1.5">
                   {p.interests.map((tag) => (
-                    <span key={tag} className="rounded-full bg-accent px-3 py-1 text-xs">{tag}</span>
+                    <span key={tag} className="rounded-full px-3 py-1 text-xs text-white/60" style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)" }}>{tag}</span>
                   ))}
                 </div>
               </div>
             )}
             {p.available_hours?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Horários</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9e7a8a" }}>Horários</p>
                 <div className="flex flex-wrap gap-1.5">
                   {p.available_hours.map((h) => (
-                    <span key={h} className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">{h}</span>
+                    <span key={h} className="rounded-full px-3 py-1 text-xs text-white/60" style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)" }}>{h}</span>
                   ))}
                 </div>
               </div>
             )}
             {!p.bio && !p.modalities?.length && !p.interests?.length && (
-              <Link to="/profile/edit" className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/50 py-14 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors">
-                <Info className="h-6 w-6" />
-                <span className="text-sm font-medium">Complete seu perfil</span>
+              <Link
+                to="/profile/edit"
+                className="flex flex-col items-center justify-center gap-3 rounded-2xl py-14"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1.5px dashed rgba(255,255,255,0.1)" }}
+              >
+                <Info className="h-6 w-6 text-white/20" />
+                <span className="text-sm font-medium text-white/25">Complete seu perfil</span>
               </Link>
             )}
           </div>
@@ -457,21 +406,44 @@ function Me() {
           SOURCE PICKER
       ══════════════════════════════════════ */}
       {sourcePickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm" onClick={() => setSourcePickerOpen(false)}>
-          <div className="w-full rounded-t-3xl bg-card p-2 pb-10" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
-            <p className="px-5 pb-2 text-[13px] font-semibold text-muted-foreground">Adicionar foto</p>
-            <button onClick={() => handleFileInput("camera")}
-              className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium hover:bg-accent transition-colors">
-              <Camera className="h-5 w-5 text-muted-foreground" /> Câmera
-            </button>
-            <button onClick={() => handleFileInput("gallery")}
-              className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium hover:bg-accent transition-colors">
-              <ImageIcon className="h-5 w-5 text-muted-foreground" /> Galeria
-            </button>
-            <button onClick={() => setSourcePickerOpen(false)}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 py-3.5 text-[15px] font-semibold">
-              <X className="h-4 w-4" /> Cancelar
+        <div className="fixed inset-0 z-50 flex items-end bg-black/75 backdrop-blur-md" onClick={() => setSourcePickerOpen(false)}>
+          <div className="w-full rounded-t-[32px] px-4 pt-3 pb-10" style={{ background: "linear-gradient(to bottom, oklch(0.20 0.012 280), oklch(0.13 0.01 280))", border: "1px solid oklch(0.25 0.015 280 / 0.5)", borderBottom: "none" }} onClick={(e) => e.stopPropagation()}>
+            {/* Handle */}
+            <div className="mx-auto mb-5 h-1 w-10 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+
+            <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Adicionar foto</p>
+
+            {/* Options */}
+            <div className="flex gap-3 mb-4">
+              <button
+                onClick={() => handleFileInput("camera")}
+                className="flex flex-1 flex-col items-center gap-3 rounded-2xl py-5 transition-all active:scale-[0.97]"
+                style={{ background: "oklch(0.22 0.012 280)", border: "1px solid oklch(0.25 0.015 280 / 0.6)" }}
+              >
+                <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-primary">
+                  <Camera className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-white">Câmera</span>
+              </button>
+
+              <button
+                onClick={() => handleFileInput("gallery")}
+                className="flex flex-1 flex-col items-center gap-3 rounded-2xl py-5 transition-all active:scale-[0.97]"
+                style={{ background: "oklch(0.22 0.012 280)", border: "1px solid oklch(0.25 0.015 280 / 0.6)" }}
+              >
+                <div className="grid h-12 w-12 place-items-center rounded-full" style={{ background: "oklch(0.28 0.012 280)" }}>
+                  <ImageIcon className="h-5 w-5 text-white/60" />
+                </div>
+                <span className="text-sm font-semibold text-white">Galeria</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setSourcePickerOpen(false)}
+              className="w-full rounded-2xl py-3.5 text-[15px] font-semibold transition-all active:scale-[0.98]"
+              style={{ background: "oklch(0.22 0.012 280)", color: "rgba(255,255,255,0.5)" }}
+            >
+              Cancelar
             </button>
           </div>
         </div>
@@ -481,27 +453,23 @@ function Me() {
           SETTINGS SHEET
       ══════════════════════════════════════ */}
       {settingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm" onClick={() => setSettingsOpen(false)}>
-          <div className="w-full rounded-t-3xl bg-card p-2 pb-10" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
-            <p className="px-5 pb-2 text-[13px] font-semibold text-muted-foreground">Configurações</p>
-            <button onClick={() => { setSettingsOpen(false); setStatus(isPaused ? "active" : "paused"); }}
-              className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium hover:bg-accent transition-colors">
-              {isPaused ? <Play className="h-5 w-5 text-green-400" /> : <Pause className="h-5 w-5 text-muted-foreground" />}
+        <div className="fixed inset-0 z-50 flex items-end bg-black/70 backdrop-blur-sm" onClick={() => setSettingsOpen(false)}>
+          <div className="w-full rounded-t-3xl p-2 pb-10" style={{ background: "linear-gradient(to bottom, oklch(0.20 0.012 280), oklch(0.13 0.01 280))", border: "1px solid oklch(0.25 0.015 280 / 0.5)" }} onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
+            <p className="px-5 pb-2 text-[13px] font-semibold text-white/40">Configurações</p>
+            <button onClick={() => { setSettingsOpen(false); setStatus(isPaused ? "active" : "paused"); }} className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium text-white hover:bg-white/5 transition-colors">
+              {isPaused ? <Play className="h-5 w-5 text-green-400" /> : <Pause className="h-5 w-5 text-white/40" />}
               {isPaused ? "Reativar conta" : "Pausar conta"}
             </button>
-            <button onClick={() => { setSettingsOpen(false); signOut(); }}
-              className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium hover:bg-accent transition-colors">
-              <LogOut className="h-5 w-5 text-muted-foreground" /> Sair
+            <button onClick={() => { setSettingsOpen(false); signOut(); }} className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium text-white hover:bg-white/5 transition-colors">
+              <LogOut className="h-5 w-5 text-white/40" /> Sair
             </button>
-            <div className="my-2 mx-5 h-px bg-border/50" />
-            <button onClick={() => { if (confirm("Excluir conta?")) setStatus("deleted"); }}
-              className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium text-destructive hover:bg-destructive/10 transition-colors">
+            <div className="my-2 mx-5 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
+            <button onClick={() => { if (confirm("Excluir conta?")) setStatus("deleted"); }} className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-[15px] font-medium text-red-400 hover:bg-red-400/8 transition-colors">
               <Trash2 className="h-5 w-5" /> Excluir conta
             </button>
-            <button onClick={() => setSettingsOpen(false)}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 py-3.5 text-[15px] font-semibold">
-              <X className="h-4 w-4" /> Cancelar
+            <button onClick={() => setSettingsOpen(false)} className="mt-2 flex w-full items-center justify-center rounded-2xl px-5 py-3.5 text-[15px] font-semibold text-white/50" style={{ background: "rgba(255,255,255,0.05)" }}>
+              <X className="h-4 w-4 mr-2" /> Cancelar
             </button>
           </div>
         </div>
