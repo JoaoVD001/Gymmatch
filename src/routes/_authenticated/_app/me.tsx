@@ -153,9 +153,9 @@ function Me() {
           </Link>
           <Link
             to="/premium"
-            className="flex-1 rounded-xl border border-border bg-card py-2 text-center text-sm font-semibold hover:bg-accent transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 rounded-xl border border-amber-400/30 bg-gradient-to-r from-amber-400/15 to-yellow-500/10 py-2 text-center text-sm font-semibold text-amber-400 hover:from-amber-400/25 hover:to-yellow-500/20 active:scale-95 active:brightness-90 transition-all flex items-center justify-center gap-1.5"
           >
-            <Crown className="h-3.5 w-3.5 text-amber-400" /> Premium
+            <Crown className="h-3.5 w-3.5" /> Premium
           </Link>
         </div>
 
