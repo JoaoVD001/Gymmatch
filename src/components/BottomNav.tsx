@@ -13,8 +13,8 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 bg-background/90 backdrop-blur-xl safe-bottom">
-      <div className="mx-auto flex max-w-md border-t border-border/40 justify-around px-2 pt-1">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-4 safe-bottom pointer-events-none">
+      <div className="pointer-events-auto flex items-center gap-1 rounded-[28px] border border-white/10 bg-background/80 backdrop-blur-2xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
         {items.map(({ to, label, Icon }) => {
           const active = loc.pathname === to || loc.pathname.startsWith(to + "/");
           const isProfile = to === "/me";
@@ -23,42 +23,36 @@ export function BottomNav() {
             <Link
               key={to}
               to={to}
-              className="relative flex flex-1 flex-col items-center gap-1 py-2"
+              className="relative flex items-center gap-2 rounded-full px-4 py-2.5 transition-all duration-300"
+              style={active ? {
+                background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)",
+                boxShadow: "0 0 16px hsl(var(--primary) / 0.45)",
+              } : {}}
             >
-              {/* Indicator line */}
-              <span
-                className={`absolute top-0 h-[2px] w-8 rounded-full transition-all duration-300 ${
-                  active ? "bg-gradient-primary opacity-100" : "opacity-0"
-                }`}
-              />
+              {isProfile && profile?.photo_url ? (
+                <img
+                  src={profile.photo_url}
+                  alt=""
+                  className={`h-5 w-5 rounded-full object-cover transition-all duration-200 ${
+                    active ? "ring-1 ring-white/60" : "ring-1 ring-border"
+                  }`}
+                />
+              ) : (
+                <Icon
+                  className={`h-[18px] w-[18px] transition-colors duration-200 shrink-0 ${
+                    active ? "text-primary-foreground" : "text-muted-foreground"
+                  }`}
+                  strokeWidth={active ? 2.3 : 1.8}
+                />
+              )}
 
               <span
-                className={`grid h-8 w-8 place-items-center rounded-xl transition-all duration-200 ${
-                  active && !isProfile ? "bg-primary/15" : ""
+                className={`text-[13px] font-semibold leading-none transition-all duration-300 overflow-hidden ${
+                  active
+                    ? "max-w-[80px] opacity-100 text-primary-foreground"
+                    : "max-w-0 opacity-0"
                 }`}
-              >
-                {isProfile && profile?.photo_url ? (
-                  <img
-                    src={profile.photo_url}
-                    alt=""
-                    className={`h-7 w-7 rounded-full object-cover transition-all duration-200 ${
-                      active ? "ring-2 ring-primary" : "ring-1 ring-border"
-                    }`}
-                  />
-                ) : (
-                  <Icon
-                    className={`h-[18px] w-[18px] transition-colors duration-200 ${
-                      active ? "text-primary" : "text-muted-foreground"
-                    }`}
-                    strokeWidth={active ? 2.2 : 1.8}
-                  />
-                )}
-              </span>
-
-              <span
-                className={`text-[10px] font-semibold leading-none transition-colors duration-200 ${
-                  active ? "text-primary" : "text-muted-foreground"
-                }`}
+                style={{ whiteSpace: "nowrap" }}
               >
                 {label}
               </span>
