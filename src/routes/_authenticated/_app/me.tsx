@@ -89,19 +89,11 @@ function Me() {
   );
 
   const isPaused = p.status === "paused";
-  const totalPhotos = (p.photo_url ? 1 : 0) + photos.length;
 
   return (
     <div>
-      {/* Hero */}
-      <div className="relative h-56 bg-muted overflow-hidden">
-        {p.photo_url
-          ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
-          : <div className="h-full w-full bg-gradient-to-br from-muted to-card" />
-        }
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-
-        {/* Settings button */}
+      {/* Header com gradiente + botões */}
+      <div className="relative h-28 bg-gradient-to-br from-primary/30 via-primary/10 to-background overflow-hidden">
         <button
           onClick={() => setSettingsOpen(true)}
           className="absolute top-4 right-4 grid h-9 w-9 place-items-center rounded-full bg-background/70 backdrop-blur text-foreground"
@@ -109,7 +101,6 @@ function Me() {
         >
           <Settings className="h-4 w-4" />
         </button>
-
         {isAdmin && (
           <Link
             to="/admin"
@@ -121,16 +112,29 @@ function Me() {
         )}
       </div>
 
-      <div className="px-5 -mt-4">
-        {/* Nome + plano */}
-        <div className="flex items-end justify-between mb-1">
-          <h1 className="font-display text-2xl font-bold leading-tight">
-            {p.name ?? "—"}{p.age ? `, ${p.age}` : ""}
-          </h1>
+      <div className="px-5">
+        {/* Avatar circular — separado da galeria */}
+        <div className="flex items-end justify-between -mt-14 mb-3">
+          <Link to="/profile/edit" className="relative group">
+            <div className="h-28 w-28 rounded-full overflow-hidden bg-muted ring-4 ring-background shadow-lg">
+              {p.photo_url
+                ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
+                : <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/20 to-muted">
+                    <Camera className="h-8 w-8 text-muted-foreground" />
+                  </div>
+              }
+            </div>
+            <span className="absolute bottom-1 right-1 grid h-7 w-7 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow ring-2 ring-background opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="h-3.5 w-3.5" />
+            </span>
+          </Link>
           <PlanBadge plan={p.plan} />
         </div>
 
-        {/* Nível · Objetivo */}
+        {/* Nome + nível */}
+        <h1 className="font-display text-2xl font-bold leading-tight mb-0.5">
+          {p.name ?? "—"}{p.age ? `, ${p.age}` : ""}
+        </h1>
         {(p.training_level || p.goal) && (
           <p className="text-sm text-muted-foreground mb-4">
             {p.training_level ? LEVEL_LABELS[p.training_level] : ""}
@@ -139,7 +143,7 @@ function Me() {
           </p>
         )}
 
-        {/* Botões de ação — estilo Instagram */}
+        {/* Botões */}
         <div className="flex gap-2 mb-5">
           <Link
             to="/profile/edit"
@@ -178,11 +182,11 @@ function Me() {
           </div>
         )}
 
-        {/* Fotos */}
+        {/* Galeria de fotos — separada da foto de perfil */}
         <div className="mb-6">
           <div className="mb-2.5 flex items-center justify-between">
             <span className="text-[13px] font-semibold text-muted-foreground">
-              Fotos <span className="font-normal">({totalPhotos}/6)</span>
+              Galeria <span className="font-normal">({photos.length}/5)</span>
             </span>
             <Link
               to="/profile/edit"
@@ -192,30 +196,32 @@ function Me() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-1.5">
-            {p.photo_url && (
-              <div className="col-span-2 row-span-2 relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted">
-                <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-2 pb-2 pt-6">
-                  <span className="text-[10px] font-semibold text-white/80">Principal</span>
+          {photos.length > 0 ? (
+            <div className="grid grid-cols-3 gap-1.5">
+              {photos.map((photo) => (
+                <div key={photo.id} className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
+                  <img src={photo.url} alt="" className="h-full w-full object-cover" />
                 </div>
-              </div>
-            )}
-            {photos.slice(0, p.photo_url ? 4 : 6).map((photo) => (
-              <div key={photo.id} className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
-                <img src={photo.url} alt="" className="h-full w-full object-cover" />
-              </div>
-            ))}
-            {totalPhotos < 6 && (
-              <Link
-                to="/profile/edit"
-                className="aspect-square rounded-2xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
-              >
-                <Plus className="h-5 w-5" />
-                <span className="text-[10px] font-medium">Adicionar</span>
-              </Link>
-            )}
-          </div>
+              ))}
+              {photos.length < 5 && (
+                <Link
+                  to="/profile/edit"
+                  className="aspect-square rounded-2xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Adicionar</span>
+                </Link>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/profile/edit"
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/50 py-8 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+            >
+              <Plus className="h-6 w-6" />
+              <span className="text-sm font-medium">Adicionar fotos à galeria</span>
+            </Link>
+          )}
         </div>
       </div>
 
