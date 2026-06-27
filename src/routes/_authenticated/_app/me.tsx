@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Settings, LogOut, Pause, Trash2, Crown, Shield, Plus, Camera, Play, X, Gem, Grid2x2, Info } from "lucide-react";
+import {
+  Settings, LogOut, Pause, Trash2, Crown, Shield,
+  Plus, Camera, Play, X, Gem, Grid2x2, Info, PencilLine,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/me")({ component: Me });
 
@@ -24,20 +27,6 @@ const LEVEL_LABELS: Record<string, string> = {
   intermediate: "Intermediário",
   advanced: "Avançado",
 };
-
-function PlanBadge({ plan }: { plan: Plan }) {
-  if (plan === "diamond") return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-2.5 py-0.5 text-[11px] font-bold text-white shadow">
-      <Gem className="h-3 w-3" /> Diamond
-    </span>
-  );
-  if (plan === "gold") return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 px-2.5 py-0.5 text-[11px] font-bold text-black shadow">
-      <Crown className="h-3 w-3" /> Gold
-    </span>
-  );
-  return null;
-}
 
 function Me() {
   const { user, isAdmin, signOut, refreshProfile } = useAuth();
@@ -84,122 +73,144 @@ function Me() {
   );
 
   const isPaused = p.status === "paused";
-  const subtitle = [p.training_level ? LEVEL_LABELS[p.training_level] : null, p.goal ? GOAL_LABELS[p.goal] : null].filter(Boolean).join(" · ");
+  const subtitle = [
+    p.training_level ? LEVEL_LABELS[p.training_level] : null,
+    p.goal ? GOAL_LABELS[p.goal] : null,
+  ].filter(Boolean).join(" · ");
 
   return (
     <div className="pb-28">
 
-      {/* ── Header rico ── */}
+      {/* ══════════════════════════════════════
+          HEADER — gradiente exato da referência
+      ══════════════════════════════════════ */}
       <div
-        className="relative h-60 overflow-hidden"
+        className="relative h-64"
         style={{ background: "linear-gradient(to bottom, oklch(0.68 0.21 22) 0%, oklch(0.22 0.07 22) 55%, oklch(0.12 0.02 22) 100%)" }}
       >
-
-        {/* Botões topo */}
-        <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 pt-4">
+        {/* Botões do topo */}
+        <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 pt-5">
           {isAdmin ? (
-            <Link to="/admin" className="grid h-9 w-9 place-items-center rounded-full bg-black/30 backdrop-blur text-blue-400">
+            <Link to="/admin" className="grid h-9 w-9 place-items-center rounded-full bg-black/25 backdrop-blur-sm text-white/80">
               <Shield className="h-4 w-4" />
             </Link>
           ) : <div className="h-9 w-9" />}
 
           <button
             onClick={() => setSettingsOpen(true)}
-            className="grid h-9 w-9 place-items-center rounded-full bg-black/30 backdrop-blur text-white"
+            className="grid h-9 w-9 place-items-center rounded-full bg-black/25 backdrop-blur-sm text-white/80"
           >
             <Settings className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Avatar + nome no rodapé do header */}
-        <div className="absolute bottom-0 inset-x-0 px-5 pb-5 flex items-end gap-4">
-          <Link to="/profile/edit" className="relative shrink-0 group">
-            <div className="h-24 w-24 rounded-full overflow-hidden bg-muted ring-4 ring-background/40 shadow-xl">
-              {p.photo_url
-                ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
-                : <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/30 to-muted">
-                    <Camera className="h-8 w-8 text-white/60" />
-                  </div>
-              }
-            </div>
-            <span className="absolute bottom-0.5 right-0.5 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-background/60 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera className="h-3.5 w-3.5" />
-            </span>
-          </Link>
-
-          <div className="pb-1 min-w-0">
-            <h1 className="font-display text-2xl font-bold text-white leading-tight truncate">
-              {p.name ?? "—"}{p.age ? `, ${p.age}` : ""}
-            </h1>
-            {subtitle && (
-              <p className="text-sm text-white/65 mt-0.5 truncate">{subtitle}</p>
-            )}
-            {p.plan !== "free" && (
-              <div className="mt-1.5">
-                <PlanBadge plan={p.plan} />
+        {/* Avatar + nome + editar — ancorados ao rodapé do header */}
+        <div className="absolute bottom-0 inset-x-0 flex items-end justify-between px-5 pb-5">
+          <div className="flex items-end gap-3.5">
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <div className="h-[82px] w-[82px] rounded-full overflow-hidden bg-black/30 ring-2 ring-white/20 shadow-xl">
+                {p.photo_url
+                  ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
+                  : <div className="grid h-full w-full place-items-center">
+                      <Camera className="h-7 w-7 text-white/50" />
+                    </div>
+                }
               </div>
-            )}
+              {/* Badge de plano sobre o avatar */}
+              {p.plan === "diamond" && (
+                <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg ring-2 ring-black/40">
+                  <Gem className="h-3 w-3 text-white" />
+                </span>
+              )}
+              {p.plan === "gold" && (
+                <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg ring-2 ring-black/40">
+                  <Crown className="h-3 w-3 text-black" />
+                </span>
+              )}
+            </div>
+
+            {/* Nome + subtítulo */}
+            <div className="pb-1 min-w-0">
+              <h1 className="font-display text-[22px] font-bold text-white leading-tight">
+                {p.name ?? "—"}{p.age ? `, ${p.age}` : ""}
+              </h1>
+              {subtitle && (
+                <p className="text-sm text-white/55 mt-0.5">{subtitle}</p>
+              )}
+            </div>
           </div>
+
+          {/* Botão editar perfil (ícone, canto direito) */}
+          <Link
+            to="/profile/edit"
+            className="mb-1 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black/25 backdrop-blur-sm text-white/80 hover:bg-black/40 transition-colors"
+          >
+            <PencilLine className="h-4 w-4" />
+          </Link>
         </div>
       </div>
 
-      {/* ── Botões de ação ── */}
-      <div className="px-5 pt-4 pb-3 flex gap-2.5">
+      {/* ══════════════════════════════════════
+          ÁREA DE AÇÕES
+      ══════════════════════════════════════ */}
+      <div className="px-4 pt-4 pb-2 flex items-center gap-2.5">
+        {/* Botão principal — Editar perfil */}
         <Link
           to="/profile/edit"
-          className="flex-1 rounded-2xl bg-primary py-2.5 text-center text-sm font-bold text-primary-foreground shadow active:scale-95 active:brightness-90 transition-all"
+          className="flex-1 rounded-2xl bg-primary py-2.5 text-center text-sm font-bold text-primary-foreground shadow-md active:scale-95 active:brightness-90 transition-all"
         >
           Editar perfil
         </Link>
+
+        {/* Botão Premium */}
         <Link
           to="/premium"
-          className="flex items-center gap-1.5 rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm font-bold text-amber-400 active:scale-95 active:brightness-90 transition-all"
+          className="grid h-[42px] w-[42px] place-items-center rounded-2xl border border-amber-400/35 bg-amber-400/10 text-amber-400 active:scale-95 transition-all"
         >
-          <Crown className="h-4 w-4" /> Premium
+          <Crown className="h-4.5 w-4.5" />
         </Link>
       </div>
 
-      {/* ── Tabs ── */}
-      <div className="px-5 pb-3 flex gap-2">
-        <button
-          onClick={() => setTab("galeria")}
-          className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-            tab === "galeria"
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Grid2x2 className="h-3.5 w-3.5" /> Galeria
-        </button>
-        <button
-          onClick={() => setTab("info")}
-          className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-            tab === "info"
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Info className="h-3.5 w-3.5" /> Info
-        </button>
+      {/* ══════════════════════════════════════
+          ABAS
+      ══════════════════════════════════════ */}
+      <div className="px-4 pb-3 pt-1 flex gap-1.5 border-b border-border/40">
+        {(["galeria", "info"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold capitalize transition-colors ${
+              tab === t
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t === "galeria" ? <Grid2x2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
+            {t === "galeria" ? "Galeria" : "Info"}
+          </button>
+        ))}
       </div>
 
-      {/* ── Conteúdo ── */}
-      <div className="px-5">
+      {/* ══════════════════════════════════════
+          CONTEÚDO
+      ══════════════════════════════════════ */}
+      <div className="px-4 pt-3">
 
-        {/* Tab: Galeria */}
+        {/* Galeria */}
         {tab === "galeria" && (
           <div>
             {photos.length > 0 ? (
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-3 gap-1">
                 {photos.map((photo) => (
-                  <div key={photo.id} className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
+                  <div key={photo.id} className="relative aspect-square overflow-hidden rounded-lg bg-muted">
                     <img src={photo.url} alt="" className="h-full w-full object-cover" />
                   </div>
                 ))}
                 {photos.length < 5 && (
                   <Link
                     to="/profile/edit"
-                    className="aspect-square rounded-2xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                    className="aspect-square rounded-lg border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
                   >
                     <Plus className="h-5 w-5" />
                     <span className="text-[10px] font-medium">Adicionar</span>
@@ -209,7 +220,7 @@ function Me() {
             ) : (
               <Link
                 to="/profile/edit"
-                className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/50 py-12 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/50 py-14 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
               >
                 <Plus className="h-6 w-6" />
                 <span className="text-sm font-medium">Adicionar fotos à galeria</span>
@@ -218,19 +229,18 @@ function Me() {
           </div>
         )}
 
-        {/* Tab: Info */}
+        {/* Info */}
         {tab === "info" && (
           <div className="space-y-5">
             {p.bio && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Sobre</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Sobre</p>
                 <p className="text-sm text-foreground/80 leading-relaxed">{p.bio}</p>
               </div>
             )}
-
             {p.modalities?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Modalidades</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Modalidades</p>
                 <div className="flex flex-wrap gap-1.5">
                   {p.modalities.map((m) => (
                     <span key={m} className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">{m}</span>
@@ -238,10 +248,9 @@ function Me() {
                 </div>
               </div>
             )}
-
             {p.interests?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Interesses</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Interesses</p>
                 <div className="flex flex-wrap gap-1.5">
                   {p.interests.map((tag) => (
                     <span key={tag} className="rounded-full bg-accent px-3 py-1 text-xs">{tag}</span>
@@ -249,10 +258,9 @@ function Me() {
                 </div>
               </div>
             )}
-
             {p.available_hours?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Horários</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Horários</p>
                 <div className="flex flex-wrap gap-1.5">
                   {p.available_hours.map((h) => (
                     <span key={h} className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">{h}</span>
@@ -260,11 +268,10 @@ function Me() {
                 </div>
               </div>
             )}
-
             {!p.bio && !p.modalities?.length && !p.interests?.length && (
               <Link
                 to="/profile/edit"
-                className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/50 py-12 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/50 py-14 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
               >
                 <Info className="h-6 w-6" />
                 <span className="text-sm font-medium">Complete seu perfil</span>
@@ -274,7 +281,9 @@ function Me() {
         )}
       </div>
 
-      {/* ── Settings sheet ── */}
+      {/* ══════════════════════════════════════
+          SETTINGS SHEET
+      ══════════════════════════════════════ */}
       {settingsOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm"
@@ -315,7 +324,7 @@ function Me() {
 
             <button
               onClick={() => setSettingsOpen(false)}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 py-3.5 text-[15px] font-semibold transition-colors"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 py-3.5 text-[15px] font-semibold"
             >
               <X className="h-4 w-4" /> Cancelar
             </button>
