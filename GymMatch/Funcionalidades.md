@@ -48,10 +48,21 @@
 - Moderação via [[Painel Administrativo]]
 - RLS (Row Level Security) no banco — cada usuário acessa só os próprios dados
 
+## Treino
+
+- Aba dedicada na bottom nav (rota `/treino`)
+- Plano semanal: define o treino de cada dia da semana, salvo por usuário no banco
+- **Convites de treino**: seleciona um match, data/hora e academia e envia convite
+- Notificação push imediata ao destinatário ao receber o convite
+- Aceitar ou recusar convites diretamente na tela
+- Lembretes automáticos: push 1 dia antes e 2h antes do treino marcado (via pg_cron + Edge Function)
+
 ## Notificações
 
-- Web Push notifications para novas mensagens e matches
+- Web Push notifications reais (VAPID) — funcionam mesmo com o app fechado
 - Push por inatividade no chat da [[IA — Lucia|Lucia]]
+- Push de convite de treino e confirmação de aceite
+- Lembretes automáticos de treino (1 dia antes e 2h antes)
 
 ---
 

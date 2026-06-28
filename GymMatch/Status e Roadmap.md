@@ -48,8 +48,27 @@
 - [x] Bottom nav: efeito spotlight — barra faz "pop" rápido (0.3s scaleX) na nova posição, cone acende devagar (0.7s scaleY) como luz real
 - [x] Discover: pilha de cards, tint verde/vermelho ao arrastar, badges CURTIR/NOPE com glow
 - [x] Perfil (`/me`): layout estilo Instagram — botões em linha, engrenagem abre sheet de configurações
-- [x] Fotos: grid estilo Tinder movido para aba Galeria do perfil (foto principal 2×2 + 4 extras); ao clicar em slot vazio abre popup "Câmera / Galeria"; profile.edit só tem dados do formulário
-- [x] Perfil (`/me`): redesign v5 — fundo radial wine/maroon `#6b0035→#0f0008`, profile card glassmorphism `rgba(30,0,20,0.82)`, botão "Editar perfil" pink gradient `#e8005a`, tabs pill branco, grid masonry 2 colunas com fotos reais
+- [x] Fotos: grid 6 slots fixos (1 grande + 2 empilhados + 3 linha inferior); limite de 6 fotos; galeria usa só `user_photos` (não mistura com `photo_url`)
+- [x] Perfil (`/me`): redesign final — fundo radial oklch hue 280 (mesma cor da taskbar), card glassmorphism, botão "Editar perfil" coral `bg-primary`, source picker e settings sheet no mesmo tom escuro
+
+### Treino
+- [x] Aba Treino na bottom nav (ícone Dumbbell, rota `/treino`)
+- [x] Plano semanal: usuário define o treino de cada dia da semana (seg–dom), salvo em `workout_schedule` com upsert; dia atual destacado
+- [x] Convites de treino: botão "Convidar" seleciona match, data/hora e academia e envia convite salvo em `workout_invites`
+- [x] Convites recebidos aparecem no topo da tela com botões Aceitar/Recusar
+- [x] Lista colapsável de treinos marcados com status (pendente/confirmado/recusado)
+- [x] Modal de convite redesenhado — fundo escuro oklch, cards com foto do match, grid data+hora lado a lado
+
+### Push Notifications (Web Push real)
+- [x] Service Worker (`/sw.js`) registrado e lida com eventos `push` e `notificationclick`
+- [x] VAPID keys geradas e configuradas no `.env`
+- [x] `push_subscriptions` table — guarda assinatura push por usuário (endpoint + p256dh + auth)
+- [x] `subscribePush()` em `src/lib/push.ts` — pede permissão e salva assinatura no banco
+- [x] Edge Function `send-push` — recebe `{user_id, title, body, url}` e envia push via `web-push`
+- [x] Edge Function `workout-reminders` — verifica invites aceitos e envia lembretes 1 dia e 2h antes
+- [x] pg_cron agendado a cada 15min para chamar `workout-reminders`
+- [x] Ao enviar convite: destinatário recebe push imediato
+- [x] Ao aceitar convite: remetente recebe push de confirmação
 
 ---
 
@@ -76,10 +95,11 @@
 - [ ] **Reuso de email após exclusão de conta** — ao excluir o perfil, deletar também o Auth user via `supabaseAdmin.auth.admin.deleteUser(userId)`, exceto se houver registro em `blocks`/`reports`
 - [ ] Filtros avançados no discover (por objetivo, modalidade, horário) — exclusivo Diamond
 - [ ] Sistema de boost de perfil — aparecer primeiro no feed
-- [ ] Notificações push de match em tempo real
 - [ ] Stories ou status de treino
 - [ ] Verificação de academia (usuário realmente frequenta)
 - [ ] Reordenar fotos por drag-and-drop na tela de edição
+- [ ] Cancelar convite de treino já enviado
+- [ ] Histórico de treinos passados separado dos futuros
 
 ### Deploy
 - [ ] Deploy em produção no Cloudflare Workers

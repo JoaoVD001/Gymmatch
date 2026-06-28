@@ -15,6 +15,8 @@
 | Deploy | Cloudflare Workers | Edge computing, latência mínima, grátis |
 | UI | shadcn/ui + Tailwind v4 | Componentes acessíveis, customizáveis |
 | IA | Groq API (Llama 3.1 8B) | Inferência rápida e gratuita |
+| Push | Web Push API + VAPID + Supabase Edge Functions | Notificações reais no celular mesmo com app fechado |
+| Cron | pg_cron (Supabase) | Lembretes automáticos de treino a cada 15min |
 | Runtime | Bun | Mais rápido que Node para install e execução |
 | Linguagem | TypeScript 5.8 | Type-safety em todo o projeto |
 
@@ -35,6 +37,7 @@ src/
 │       │   ├── matches.tsx          # Lista de matches
 │       │   ├── me.tsx               # Perfil próprio (estilo Instagram)
 │       │   ├── profile.edit.tsx     # Edição de perfil e fotos
+│       │   ├── treino.tsx           # Plano semanal + convites de treino
 │       │   ├── premium.tsx          # Tela de planos
 │       │   ├── payment.tsx          # Checkout Stripe
 │       │   └── payment_.success.tsx # Sucesso pós-pagamento
@@ -48,8 +51,14 @@ src/
     ├── stripe.ts                    # Server functions de checkout
     ├── lucia.ts                     # Lógica local da Lucia (swipe hint)
     ├── lucia-ai.ts                  # Server function Groq API
-    ├── push.ts                      # Web Push notifications
+    ├── push.ts                      # Web Push: registerSW, subscribePush, fireLuciaPush
     └── utils.ts                     # cn(), translateError()
+supabase/
+├── functions/
+│   ├── send-push/index.ts           # Edge Function: envia push via web-push + VAPID
+│   └── workout-reminders/index.ts   # Edge Function: lembretes automáticos (chamada via pg_cron)
+└── migrations/
+    └── 20260627_push_and_invites.sql # push_subscriptions + workout_invites + RLS
 ```
 
 ## Decisões de arquitetura

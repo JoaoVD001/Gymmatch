@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Bem-vindo.md",
+                "file": "Painel Administrativo.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Bem-vindo"
+              "title": "Painel Administrativo"
             }
           }
         ]
@@ -202,6 +202,8 @@
   "active": "345e9dfbef2c0375",
   "lastOpenFiles": [
     "Status e Roadmap.md",
+    "Conceito e Problema.md",
+    "Bem-vindo.md",
     "Painel Administrativo.md",
     "Painel Administrativo.md.tmp.15004.dd6397e8da0e",
     "Planos e Monetização.md",
@@ -214,8 +216,6 @@
     "Banco de Dados.md",
     "Banco de Dados.md.tmp.15004.c7ed4ae87742",
     "Arquitetura Técnica.md",
-    "Funcionalidades.md",
-    "Conceito e Problema.md",
-    "Bem-vindo.md"
+    "Funcionalidades.md"
   ]
 }
