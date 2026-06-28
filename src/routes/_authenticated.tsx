@@ -11,7 +11,7 @@ import {
   setLuciaUnread,
   type LuciaMessage,
 } from "@/lib/lucia";
-import { fireLuciaPush } from "@/lib/push";
+import { fireLuciaPush, registerSW, subscribePush } from "@/lib/push";
 
 export const Route = createFileRoute("/_authenticated")({ component: Gate });
 
@@ -127,6 +127,10 @@ function Gate() {
     }
     if (profile && !profile.profile_complete && !loc.pathname.startsWith("/onboarding")) {
       nav({ to: "/onboarding" });
+    }
+    // Registra push subscription quando usuário está logado
+    if (session.user?.id) {
+      registerSW().then(() => subscribePush(session.user.id));
     }
   }, [loading, session, profile, loc.pathname, nav]);
 
