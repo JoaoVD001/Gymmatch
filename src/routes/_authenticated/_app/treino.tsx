@@ -151,6 +151,7 @@ function Treino() {
     if (editingDay) return;
     setExpandedDay((prev) => prev === key ? null : key);
     setAddingDay(null);
+    setExName(""); setExSets(""); setExReps("");
   }
 
   function startAddEx(key: keyof Schedule) {
@@ -294,149 +295,137 @@ function Treino() {
             {WEEK_DAYS.map(({ key, short, full }) => {
               const isToday    = key === TODAY_KEY;
               const isEditing  = editingDay === key;
-              const isExpanded = expandedDay === key;
+              const isSelected = expandedDay === key;
               const value      = schedule[key];
               const exList     = exercises[key] ?? [];
 
               return (
-                <div key={key} className={isToday ? "bg-primary/8" : ""}>
-                  {/* Linha do dia */}
-                  <div
-                    className="flex items-center gap-3 px-4 py-3.5 cursor-pointer"
-                    onClick={() => !isEditing && toggleDay(key)}
-                  >
-                    <div className="w-10 shrink-0 text-center">
-                      <p className={`text-[11px] font-bold ${isToday ? "text-primary" : "text-muted-foreground"}`}>{short}</p>
-                      {isToday && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-primary" />}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      {isEditing ? (
-                        <input
-                          ref={inputRef}
-                          value={dayDraft}
-                          onChange={(e) => setDayDraft(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === "Enter") saveDay(key); if (e.key === "Escape") setEditingDay(null); }}
-                          placeholder={`Treino de ${full.toLowerCase()}...`}
-                          className="w-full rounded-lg bg-muted/60 border border-primary/40 px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <p className={`text-sm truncate ${value ? "text-foreground" : "text-muted-foreground/40 italic"}`}>
-                            {value || "Descanso"}
-                          </p>
-                          {exList.length > 0 && (
-                            <span className="shrink-0 text-[10px] font-semibold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">
-                              {exList.length}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      {isEditing ? (
-                        <>
-                          <button onClick={() => saveDay(key)} className="grid h-7 w-7 place-items-center rounded-lg bg-primary/15 text-primary active:scale-90 transition-all"><Check className="h-3.5 w-3.5" /></button>
-                          <button onClick={() => setEditingDay(null)} className="grid h-7 w-7 place-items-center rounded-lg border border-border text-muted-foreground active:scale-90 transition-all"><X className="h-3.5 w-3.5" /></button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => startEdit(key)} className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground/40 hover:text-muted-foreground transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
-                          <div className={`text-muted-foreground/30 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
-                            <ChevronDown className="h-4 w-4" />
-                          </div>
-                        </>
-                      )}
-                    </div>
+                <div key={key} className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors ${isToday ? "bg-primary/8" : ""} ${isSelected ? "bg-white/4" : ""}`}
+                  onClick={() => !isEditing && toggleDay(key)}
+                >
+                  <div className="w-10 shrink-0 text-center">
+                    <p className={`text-[11px] font-bold ${isToday ? "text-primary" : isSelected ? "text-foreground" : "text-muted-foreground"}`}>{short}</p>
+                    {isToday && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-primary" />}
                   </div>
 
-                  {/* Exercícios expandidos */}
-                  {isExpanded && (
-                    <div className="px-4 pb-3 border-t border-border/20">
-                      {exList.length > 0 && (
-                        <div className="space-y-1 mt-2 mb-2">
-                          {exList.map((ex) => (
-                            <div key={ex.id} className="flex items-center gap-2 rounded-xl bg-muted/30 px-3 py-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-foreground truncate">{ex.name}</p>
-                                {(ex.sets || ex.reps) && (
-                                  <p className="text-xs text-muted-foreground">
-                                    {ex.sets ? `${ex.sets} séries` : ""}
-                                    {ex.sets && ex.reps ? " × " : ""}
-                                    {ex.reps ? `${ex.reps} reps` : ""}
-                                  </p>
-                                )}
-                              </div>
-                              <button
-                                onClick={() => deleteExercise(key, ex.id)}
-                                className="grid h-6 w-6 place-items-center rounded-lg text-muted-foreground/30 hover:text-destructive transition-colors shrink-0"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                  <div className="flex-1 min-w-0">
+                    {isEditing ? (
+                      <input ref={inputRef} value={dayDraft}
+                        onChange={(e) => setDayDraft(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") saveDay(key); if (e.key === "Escape") setEditingDay(null); }}
+                        placeholder={`Treino de ${full.toLowerCase()}...`}
+                        className="w-full rounded-lg bg-muted/60 border border-primary/40 px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm truncate ${value ? "text-foreground" : "text-muted-foreground/40 italic"}`}>
+                          {value || "Descanso"}
+                        </p>
+                        {exList.length > 0 && (
+                          <span className="shrink-0 text-[10px] font-semibold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">
+                            {exList.length}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                      {addingDay === key ? (
-                        <div className="mt-2 space-y-2">
-                          <input
-                            ref={exInputRef}
-                            value={exName}
-                            onChange={(e) => setExName(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") addExercise(key); if (e.key === "Escape") setAddingDay(null); }}
-                            placeholder="Nome do exercício..."
-                            className="w-full rounded-xl bg-muted/40 border border-primary/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
-                          />
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              value={exSets}
-                              onChange={(e) => setExSets(e.target.value)}
-                              placeholder="Séries"
-                              className="flex-1 rounded-xl bg-muted/40 border border-border/40 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
-                            />
-                            <input
-                              type="number"
-                              value={exReps}
-                              onChange={(e) => setExReps(e.target.value)}
-                              placeholder="Reps"
-                              className="flex-1 rounded-xl bg-muted/40 border border-border/40 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
-                            />
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => addExercise(key)}
-                              disabled={!exName.trim()}
-                              className="flex-1 rounded-xl py-2 text-xs font-semibold text-white bg-gradient-primary shadow-glow active:scale-95 transition-all disabled:opacity-40"
-                            >
-                              Adicionar
-                            </button>
-                            <button
-                              onClick={() => setAddingDay(null)}
-                              className="rounded-xl px-4 py-2 text-xs font-semibold text-muted-foreground border border-border active:scale-95 transition-all"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
+                  <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    {isEditing ? (
+                      <>
+                        <button onClick={() => saveDay(key)} className="grid h-7 w-7 place-items-center rounded-lg bg-primary/15 text-primary active:scale-90 transition-all"><Check className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => setEditingDay(null)} className="grid h-7 w-7 place-items-center rounded-lg border border-border text-muted-foreground active:scale-90 transition-all"><X className="h-3.5 w-3.5" /></button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => startEdit(key)} className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground/40 hover:text-muted-foreground transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
+                        <div className={`text-muted-foreground/30 transition-transform duration-200 ${isSelected ? "rotate-180" : ""}`}>
+                          <ChevronDown className="h-4 w-4" />
                         </div>
-                      ) : (
-                        <button
-                          onClick={() => startAddEx(key)}
-                          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold text-primary border border-primary/20 bg-primary/5 active:scale-[0.98] transition-all"
-                        >
-                          <Plus className="h-3.5 w-3.5" /> Adicionar exercício
-                        </button>
-                      )}
-                    </div>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
+
+        {/* ── Exercícios do dia selecionado ── */}
+        {expandedDay && (() => {
+          const { full } = WEEK_DAYS.find((d) => d.key === expandedDay)!;
+          const exList = exercises[expandedDay] ?? [];
+          return (
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3 px-1">
+                Exercícios — {full}
+              </p>
+              <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+                {exList.length > 0 && (
+                  <div className="divide-y divide-border/20">
+                    {exList.map((ex) => (
+                      <div key={ex.id} className="flex items-center gap-3 px-4 py-3">
+                        <div className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 shrink-0">
+                          <Dumbbell className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{ex.name}</p>
+                          {(ex.sets || ex.reps) && (
+                            <p className="text-xs text-muted-foreground">
+                              {ex.sets ? `${ex.sets} séries` : ""}
+                              {ex.sets && ex.reps ? " × " : ""}
+                              {ex.reps ? `${ex.reps} reps` : ""}
+                            </p>
+                          )}
+                        </div>
+                        <button onClick={() => deleteExercise(expandedDay, ex.id)}
+                          className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground/30 hover:text-destructive transition-colors shrink-0">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {addingDay === expandedDay ? (
+                  <div className="p-4 space-y-3 border-t border-border/20">
+                    <input ref={exInputRef} value={exName} onChange={(e) => setExName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") addExercise(expandedDay); if (e.key === "Escape") setAddingDay(null); }}
+                      placeholder="Nome do exercício..."
+                      className="w-full rounded-xl bg-muted/40 border border-primary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <input type="number" value={exSets} onChange={(e) => setExSets(e.target.value)}
+                        placeholder="Séries"
+                        className="flex-1 rounded-xl bg-muted/40 border border-border/40 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
+                      />
+                      <input type="number" value={exReps} onChange={(e) => setExReps(e.target.value)}
+                        placeholder="Reps"
+                        className="flex-1 rounded-xl bg-muted/40 border border-border/40 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => addExercise(expandedDay)} disabled={!exName.trim()}
+                        className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white bg-gradient-primary shadow-glow active:scale-95 transition-all disabled:opacity-40">
+                        Adicionar
+                      </button>
+                      <button onClick={() => setAddingDay(null)}
+                        className="rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground border border-border active:scale-95 transition-all">
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => startAddEx(expandedDay)}
+                    className={`flex w-full items-center justify-center gap-2 px-4 py-3.5 text-sm font-semibold text-primary active:scale-[0.98] transition-all ${exList.length > 0 ? "border-t border-border/20" : ""}`}>
+                    <Plus className="h-4 w-4" /> Adicionar exercício
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Todos os convites ── */}
         {invites.length > 0 && (
