@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Pencil, X, Check, Dumbbell, UserPlus, Clock, MapPin, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { Pencil, X, Check, Dumbbell, UserPlus, Clock, MapPin, ChevronDown, Plus, Trash2, ListChecks } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/treino")({ component: Treino });
 
@@ -57,25 +57,26 @@ function Treino() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // exercícios
-  const [exercises, setExercises]     = useState<Exercises>({});
-  const [expandedDay, setExpandedDay] = useState<keyof Schedule | null>(null);
-  const [addingDay, setAddingDay]     = useState<keyof Schedule | null>(null);
-  const [exName, setExName]           = useState("");
-  const [exSets, setExSets]           = useState("");
-  const [exReps, setExReps]           = useState("");
+  const [exercises, setExercises]       = useState<Exercises>({});
+  const [showExModal, setShowExModal]   = useState(false);
+  const [exDay, setExDay]               = useState<keyof Schedule | null>(null);
+  const [addingEx, setAddingEx]         = useState(false);
+  const [exName, setExName]             = useState("");
+  const [exSets, setExSets]             = useState("");
+  const [exReps, setExReps]             = useState("");
   const exInputRef = useRef<HTMLInputElement>(null);
 
   // convites
-  const [invites, setInvites]         = useState<Invite[]>([]);
-  const [matches, setMatches]         = useState<Match[]>([]);
+  const [invites, setInvites]           = useState<Invite[]>([]);
+  const [matches, setMatches]           = useState<Match[]>([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [invStep, setInvStep]         = useState<1 | 2>(1);
-  const [selMatch, setSelMatch]       = useState<Match | null>(null);
-  const [invDate, setInvDate]         = useState("");
-  const [invTime, setInvTime]         = useState("");
-  const [invAcademy, setInvAcademy]   = useState("");
-  const [sending, setSending]         = useState(false);
-  const [showInvites, setShowInvites] = useState(true);
+  const [invStep, setInvStep]           = useState<1 | 2>(1);
+  const [selMatch, setSelMatch]         = useState<Match | null>(null);
+  const [invDate, setInvDate]           = useState("");
+  const [invTime, setInvTime]           = useState("");
+  const [invAcademy, setInvAcademy]     = useState("");
+  const [sending, setSending]           = useState(false);
+  const [showInvites, setShowInvites]   = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -114,17 +115,11 @@ function Treino() {
   }, [user]);
 
   async function loadMatches(uid: string) {
-    const { data } = await supabase
-      .from("matches")
-      .select("user_a,user_b")
-      .or(`user_a.eq.${uid},user_b.eq.${uid}`);
+    const { data } = await supabase.from("matches").select("user_a,user_b").or(`user_a.eq.${uid},user_b.eq.${uid}`);
     if (!data?.length) return;
-    const ids = (data as { user_a: string; user_b: string }[])
-      .map((m) => m.user_a === uid ? m.user_b : m.user_a);
+    const ids = (data as { user_a: string; user_b: string }[]).map((m) => m.user_a === uid ? m.user_b : m.user_a);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profiles } = await (supabase.from as any)("profiles")
-      .select("id,name,photo_url,gym")
-      .in("id", ids);
+    const { data: profiles } = await (supabase.from as any)("profiles").select("id,name,photo_url,gym").in("id", ids);
     setMatches((profiles ?? []) as Match[]);
   }
 
@@ -134,7 +129,6 @@ function Treino() {
     setDayDraft(schedule[key]);
     setTimeout(() => inputRef.current?.focus(), 80);
   }
-
   async function saveDay(key: keyof Schedule) {
     if (!user) return;
     const next = { ...schedule, [key]: dayDraft.trim() };
@@ -146,36 +140,19 @@ function Treino() {
     setEditingDay(null);
   }
 
-  /* ── Exercícios ── */
-  function toggleDay(key: keyof Schedule) {
-    if (editingDay) return;
-    setExpandedDay((prev) => prev === key ? null : key);
-    setAddingDay(null);
-    setExName(""); setExSets(""); setExReps("");
-  }
+  /* ── Exercícios (modal) ── */
+  function openExModal() { setShowExModal(true); setExDay(null); setAddingEx(false); }
+  function selectExDay(key: keyof Schedule) { setExDay(key); setAddingEx(false); setExName(""); setExSets(""); setExReps(""); }
 
-  function startAddEx(key: keyof Schedule) {
-    setAddingDay(key);
-    setExName(""); setExSets(""); setExReps("");
-    setTimeout(() => exInputRef.current?.focus(), 80);
-  }
-
-  async function addExercise(key: keyof Schedule) {
-    if (!user || !exName.trim()) return;
-    const list = exercises[key] ?? [];
-    const position = list.length;
+  async function addExercise() {
+    if (!user || !exDay || !exName.trim()) return;
+    const list = exercises[exDay] ?? [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from as any)("workout_exercises")
-      .insert({
-        user_id: user.id, day_key: key, name: exName.trim(),
-        sets: exSets ? parseInt(exSets) : null,
-        reps: exReps ? parseInt(exReps) : null,
-        position,
-      })
-      .select("id,name,sets,reps,position")
-      .single();
+      .insert({ user_id: user.id, day_key: exDay, name: exName.trim(), sets: exSets ? parseInt(exSets) : null, reps: exReps ? parseInt(exReps) : null, position: list.length })
+      .select("id,name,sets,reps,position").single();
     if (error) { toast.error(error.message); return; }
-    setExercises((prev) => ({ ...prev, [key]: [...(prev[key] ?? []), data as Exercise] }));
+    setExercises((prev) => ({ ...prev, [exDay]: [...(prev[exDay] ?? []), data as Exercise] }));
     setExName(""); setExSets(""); setExReps("");
     setTimeout(() => exInputRef.current?.focus(), 50);
   }
@@ -187,7 +164,7 @@ function Treino() {
     setExercises((prev) => ({ ...prev, [key]: (prev[key] ?? []).filter((e) => e.id !== id) }));
   }
 
-  /* ── Enviar convite ── */
+  /* ── Convites ── */
   async function sendInvite() {
     if (!user || !selMatch || !invDate || !invTime || !invAcademy.trim()) return;
     setSending(true);
@@ -206,7 +183,6 @@ function Treino() {
     setInvStep(1); setSelMatch(null); setInvDate(""); setInvTime(""); setInvAcademy("");
   }
 
-  /* ── Responder convite ── */
   async function respondInvite(id: string, status: "accepted" | "declined", invite: Invite) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from as any)("workout_invites").update({ status }).eq("id", id);
@@ -227,6 +203,7 @@ function Treino() {
   );
 
   const pendingReceived = invites.filter((i) => i.status === "pending" && i.from_user !== user?.id);
+  const daysWithEx = WEEK_DAYS.filter(({ key }) => (exercises[key]?.length ?? 0) > 0);
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -260,7 +237,7 @@ function Treino() {
 
       <div className="px-4 pt-5 space-y-5">
 
-        {/* ── Convites pendentes recebidos ── */}
+        {/* ── Convites pendentes ── */}
         {pendingReceived.length > 0 && (
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2 px-1">Convites recebidos</p>
@@ -293,21 +270,15 @@ function Treino() {
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3 px-1">Plano da Semana</p>
           <div className="rounded-2xl border border-border/50 bg-card overflow-hidden divide-y divide-border/30">
             {WEEK_DAYS.map(({ key, short, full }) => {
-              const isToday    = key === TODAY_KEY;
-              const isEditing  = editingDay === key;
-              const isSelected = expandedDay === key;
-              const value      = schedule[key];
-              const exList     = exercises[key] ?? [];
-
+              const isToday   = key === TODAY_KEY;
+              const isEditing = editingDay === key;
+              const value     = schedule[key];
               return (
-                <div key={key} className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-colors ${isToday ? "bg-primary/8" : ""} ${isSelected ? "bg-white/4" : ""}`}
-                  onClick={() => !isEditing && toggleDay(key)}
-                >
+                <div key={key} className={`flex items-center gap-3 px-4 py-3.5 transition-colors ${isToday ? "bg-primary/8" : ""}`}>
                   <div className="w-10 shrink-0 text-center">
-                    <p className={`text-[11px] font-bold ${isToday ? "text-primary" : isSelected ? "text-foreground" : "text-muted-foreground"}`}>{short}</p>
+                    <p className={`text-[11px] font-bold ${isToday ? "text-primary" : "text-muted-foreground"}`}>{short}</p>
                     {isToday && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-primary" />}
                   </div>
-
                   <div className="flex-1 min-w-0">
                     {isEditing ? (
                       <input ref={inputRef} value={dayDraft}
@@ -315,35 +286,23 @@ function Treino() {
                         onKeyDown={(e) => { if (e.key === "Enter") saveDay(key); if (e.key === "Escape") setEditingDay(null); }}
                         placeholder={`Treino de ${full.toLowerCase()}...`}
                         className="w-full rounded-lg bg-muted/60 border border-primary/40 px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                        onClick={(e) => e.stopPropagation()}
                       />
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <p className={`text-sm truncate ${value ? "text-foreground" : "text-muted-foreground/40 italic"}`}>
-                          {value || "Descanso"}
-                        </p>
-                        {exList.length > 0 && (
-                          <span className="shrink-0 text-[10px] font-semibold text-primary bg-primary/10 rounded-full px-1.5 py-0.5">
-                            {exList.length}
-                          </span>
-                        )}
-                      </div>
+                      <p className={`text-sm truncate ${value ? "text-foreground" : "text-muted-foreground/40 italic"}`}>
+                        {value || "Descanso"}
+                      </p>
                     )}
                   </div>
-
-                  <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-1 shrink-0">
                     {isEditing ? (
                       <>
                         <button onClick={() => saveDay(key)} className="grid h-7 w-7 place-items-center rounded-lg bg-primary/15 text-primary active:scale-90 transition-all"><Check className="h-3.5 w-3.5" /></button>
                         <button onClick={() => setEditingDay(null)} className="grid h-7 w-7 place-items-center rounded-lg border border-border text-muted-foreground active:scale-90 transition-all"><X className="h-3.5 w-3.5" /></button>
                       </>
                     ) : (
-                      <>
-                        <button onClick={() => startEdit(key)} className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground/40 hover:text-muted-foreground transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
-                        <div className={`text-muted-foreground/30 transition-transform duration-200 ${isSelected ? "rotate-180" : ""}`}>
-                          <ChevronDown className="h-4 w-4" />
-                        </div>
-                      </>
+                      <button onClick={() => startEdit(key)} className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -352,87 +311,63 @@ function Treino() {
           </div>
         </div>
 
-        {/* ── Exercícios do dia selecionado ── */}
-        {expandedDay && (() => {
-          const { full } = WEEK_DAYS.find((d) => d.key === expandedDay)!;
-          const exList = exercises[expandedDay] ?? [];
-          return (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3 px-1">
-                Exercícios — {full}
-              </p>
-              <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-                {exList.length > 0 && (
-                  <div className="divide-y divide-border/20">
-                    {exList.map((ex) => (
-                      <div key={ex.id} className="flex items-center gap-3 px-4 py-3">
-                        <div className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 shrink-0">
-                          <Dumbbell className="h-3.5 w-3.5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{ex.name}</p>
-                          {(ex.sets || ex.reps) && (
-                            <p className="text-xs text-muted-foreground">
-                              {ex.sets ? `${ex.sets} séries` : ""}
-                              {ex.sets && ex.reps ? " × " : ""}
-                              {ex.reps ? `${ex.reps} reps` : ""}
-                            </p>
-                          )}
-                        </div>
-                        <button onClick={() => deleteExercise(expandedDay, ex.id)}
-                          className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground/30 hover:text-destructive transition-colors shrink-0">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+        {/* ── Botão Meus Exercícios ── */}
+        <button
+          onClick={openExModal}
+          className="flex w-full items-center gap-3 rounded-2xl border border-border/50 bg-card px-4 py-4 active:scale-[0.98] transition-all"
+        >
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 shrink-0">
+            <ListChecks className="h-4.5 w-4.5 text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold text-foreground">Meus Exercícios</p>
+            <p className="text-xs text-muted-foreground">
+              {daysWithEx.length === 0 ? "Adicione exercícios por dia da semana" : `${daysWithEx.map(d => d.short).join(" · ")}`}
+            </p>
+          </div>
+          <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+        </button>
 
-                {addingDay === expandedDay ? (
-                  <div className="p-4 space-y-3 border-t border-border/20">
-                    <input ref={exInputRef} value={exName} onChange={(e) => setExName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") addExercise(expandedDay); if (e.key === "Escape") setAddingDay(null); }}
-                      placeholder="Nome do exercício..."
-                      className="w-full rounded-xl bg-muted/40 border border-primary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
-                    />
-                    <div className="flex gap-2">
-                      <input type="number" value={exSets} onChange={(e) => setExSets(e.target.value)}
-                        placeholder="Séries"
-                        className="flex-1 rounded-xl bg-muted/40 border border-border/40 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
-                      />
-                      <input type="number" value={exReps} onChange={(e) => setExReps(e.target.value)}
-                        placeholder="Reps"
-                        className="flex-1 rounded-xl bg-muted/40 border border-border/40 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => addExercise(expandedDay)} disabled={!exName.trim()}
-                        className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white bg-gradient-primary shadow-glow active:scale-95 transition-all disabled:opacity-40">
-                        Adicionar
-                      </button>
-                      <button onClick={() => setAddingDay(null)}
-                        className="rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground border border-border active:scale-95 transition-all">
-                        Cancelar
-                      </button>
-                    </div>
+        {/* ── Resumo de exercícios na tela ── */}
+        {daysWithEx.length > 0 && (
+          <div className="space-y-2">
+            {daysWithEx.map(({ key, full }) => (
+              <div key={key} className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border/20">
+                  <div className="flex items-center gap-2">
+                    <p className={`text-xs font-bold ${key === TODAY_KEY ? "text-primary" : "text-muted-foreground"}`}>{full.toUpperCase()}</p>
+                    {key === TODAY_KEY && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
                   </div>
-                ) : (
-                  <button onClick={() => startAddEx(expandedDay)}
-                    className={`flex w-full items-center justify-center gap-2 px-4 py-3.5 text-sm font-semibold text-primary active:scale-[0.98] transition-all ${exList.length > 0 ? "border-t border-border/20" : ""}`}>
-                    <Plus className="h-4 w-4" /> Adicionar exercício
+                  <button onClick={() => { setShowExModal(true); setExDay(key); setAddingEx(false); }} className="text-[11px] text-primary font-semibold active:opacity-70">
+                    Editar
                   </button>
-                )}
+                </div>
+                <div className="divide-y divide-border/10">
+                  {(exercises[key] ?? []).map((ex) => (
+                    <div key={ex.id} className="flex items-center gap-3 px-4 py-2.5">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0" />
+                      <p className="flex-1 text-sm text-foreground truncate">{ex.name}</p>
+                      {(ex.sets || ex.reps) && (
+                        <p className="text-xs text-muted-foreground shrink-0">
+                          {ex.sets ?? "—"} × {ex.reps ?? "—"}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })()}
+            ))}
+          </div>
+        )}
 
-        {/* ── Todos os convites ── */}
+        {/* ── Treinos marcados ── */}
         {invites.length > 0 && (
           <div>
             <button className="flex w-full items-center justify-between px-1 mb-3" onClick={() => setShowInvites((v) => !v)}>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Treinos marcados</p>
-              {showInvites ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              {showInvites
+                ? <ChevronDown className="h-4 w-4 text-muted-foreground rotate-180" />
+                : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </button>
             {showInvites && (
               <div className="space-y-2">
@@ -464,7 +399,131 @@ function Treino() {
         )}
       </div>
 
-      {/* ══ MODAL DE CONVITE ══ */}
+      {/* ══ MODAL EXERCÍCIOS ══ */}
+      {showExModal && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm" onClick={() => { setShowExModal(false); setExDay(null); }}>
+          <div
+            className="w-full rounded-t-[36px] px-5 pt-3 pb-10 border-t border-x border-border/40"
+            style={{ background: "linear-gradient(to bottom, oklch(0.17 0.012 280), oklch(0.13 0.01 280))" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-5 h-1 w-12 rounded-full bg-white/10" />
+
+            {/* Step 1 — escolher dia */}
+            {!exDay && (
+              <>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-primary shadow-glow shrink-0">
+                    <ListChecks className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-base font-bold text-foreground">Meus Exercícios</p>
+                    <p className="text-xs text-muted-foreground">Selecione o dia para editar</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {WEEK_DAYS.map(({ key, full }) => {
+                    const count = exercises[key]?.length ?? 0;
+                    const isToday = key === TODAY_KEY;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => selectExDay(key)}
+                        className={`flex items-center justify-between rounded-2xl border px-4 py-3.5 text-left active:scale-[0.97] transition-all ${isToday ? "border-primary/30 bg-primary/8" : "border-white/5 bg-white/5"}`}
+                      >
+                        <div>
+                          <p className={`text-sm font-semibold ${isToday ? "text-primary" : "text-foreground"}`}>{full}</p>
+                          <p className="text-xs text-muted-foreground">{count > 0 ? `${count} exercício${count > 1 ? "s" : ""}` : "Vazio"}</p>
+                        </div>
+                        {count > 0 && <span className="text-[11px] font-bold text-primary bg-primary/15 rounded-full px-2 py-0.5">{count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Step 2 — exercícios do dia */}
+            {exDay && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <button onClick={() => { setExDay(null); setAddingEx(false); }}
+                    className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-muted-foreground active:scale-90 transition-all shrink-0">
+                    <ChevronDown className="h-4 w-4 rotate-90" />
+                  </button>
+                  <div>
+                    <p className="text-base font-bold text-foreground">{WEEK_DAYS.find(d => d.key === exDay)?.full}</p>
+                    <p className="text-xs text-muted-foreground">{exercises[exDay]?.length ?? 0} exercício(s)</p>
+                  </div>
+                </div>
+
+                <div className="max-h-52 overflow-y-auto space-y-1.5 mb-3">
+                  {(exercises[exDay] ?? []).length === 0 && !addingEx && (
+                    <p className="text-sm text-muted-foreground/50 italic text-center py-4">Nenhum exercício ainda.</p>
+                  )}
+                  {(exercises[exDay] ?? []).map((ex) => (
+                    <div key={ex.id} className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary/60 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground truncate">{ex.name}</p>
+                        {(ex.sets || ex.reps) && (
+                          <p className="text-xs text-muted-foreground">{ex.sets ?? "—"} séries × {ex.reps ?? "—"} reps</p>
+                        )}
+                      </div>
+                      <button onClick={() => deleteExercise(exDay, ex.id)}
+                        className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground/30 hover:text-destructive transition-colors shrink-0">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {addingEx ? (
+                  <div className="space-y-2.5">
+                    <input ref={exInputRef} value={exName} onChange={(e) => setExName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") addExercise(); if (e.key === "Escape") setAddingEx(false); }}
+                      placeholder="Nome do exercício..."
+                      className="w-full rounded-xl border border-primary/30 bg-white/6 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <input type="number" value={exSets} onChange={(e) => setExSets(e.target.value)}
+                        placeholder="Séries"
+                        className="flex-1 rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
+                      />
+                      <input type="number" value={exReps} onChange={(e) => setExReps(e.target.value)}
+                        placeholder="Reps"
+                        className="flex-1 rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={addExercise} disabled={!exName.trim()}
+                        className="flex-1 rounded-2xl py-3 text-sm font-semibold text-white bg-gradient-primary shadow-glow active:scale-[0.98] transition-all disabled:opacity-40">
+                        Adicionar
+                      </button>
+                      <button onClick={() => setAddingEx(false)}
+                        className="rounded-2xl px-4 py-3 text-sm font-semibold text-muted-foreground border border-white/10 active:scale-[0.98] transition-all">
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => { setAddingEx(true); setTimeout(() => exInputRef.current?.focus(), 80); }}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-primary/8 py-3 text-sm font-semibold text-primary active:scale-[0.98] transition-all">
+                    <Plus className="h-4 w-4" /> Adicionar exercício
+                  </button>
+                )}
+              </>
+            )}
+
+            <button onClick={() => { setShowExModal(false); setExDay(null); }}
+              className="mt-3 w-full rounded-2xl py-3 text-sm font-semibold text-muted-foreground/60 active:scale-[0.98] transition-all">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL CONVITE ══ */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)}>
           <div
@@ -496,7 +555,7 @@ function Treino() {
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                   {matches.map((m) => (
                     <button key={m.id} onClick={() => { setSelMatch(m); setInvStep(2); }}
-                      className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/8 p-3.5 text-left active:scale-[0.98] transition-all">
+                      className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 p-3.5 text-left active:scale-[0.98] transition-all">
                       {m.photo_url
                         ? <img src={m.photo_url} className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/30" alt="" />
                         : <div className="grid h-11 w-11 place-items-center rounded-full bg-primary/20 ring-2 ring-primary/20"><Dumbbell className="h-4 w-4 text-primary" /></div>
