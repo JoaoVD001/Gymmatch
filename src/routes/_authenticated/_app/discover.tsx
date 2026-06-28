@@ -15,6 +15,7 @@ type Card = {
   age: number | null;
   bio: string | null;
   photo_url: string | null;
+  photos: string[];
   goal: string | null;
   training_level: string | null;
   modalities: string[];
@@ -47,21 +48,24 @@ function Discover() {
   const nav = useNavigate();
   const [cards, setCards] = useState<Card[]>([]);
   const [i, setI] = useState(0);
+  const [photoIdx, setPhotoIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const lastLikedRef = useRef<{ id: string; index: number } | null>(null);
   const [upgradeReason, setUpgradeReason] = useState<"daily_limit" | "match_limit" | "undo" | "images" | null>(null);
 
   // Swipe state
   const startXRef = useRef(0);
+  const startYRef = useRef(0);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [flyingOut, setFlyingOut] = useState(false);
 
-  // Reset swipe state on card change
+  // Reset swipe + photo on card change
   useEffect(() => {
     setDragX(0);
     setDragging(false);
     setFlyingOut(false);
+    setPhotoIdx(0);
   }, [i]);
 
   const load = useCallback(async () => {
@@ -123,12 +127,25 @@ function Discover() {
       return;
     }
 
+    const profileIds = (data ?? []).map((p: any) => p.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: extraPhotos } = await (supabase.from as any)("user_photos")
+      .select("user_id,photo_url")
+      .in("user_id", profileIds)
+      .order("created_at", { ascending: true });
+    const photosMap: Record<string, string[]> = {};
+    for (const row of (extraPhotos ?? []) as { user_id: string; photo_url: string }[]) {
+      if (!photosMap[row.user_id]) photosMap[row.user_id] = [];
+      photosMap[row.user_id].push(row.photo_url);
+    }
+
     const mapped: Card[] = (data ?? []).map((p: any) => ({
       id: p.id,
       name: p.name,
       age: p.age,
       bio: p.bio,
       photo_url: p.photo_url,
+      photos: photosMap[p.id] ?? [],
       goal: p.goal,
       training_level: p.training_level,
       modalities: p.modalities ?? [],
@@ -204,6 +221,7 @@ function Discover() {
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (flyingOut) return;
     startXRef.current = e.clientX;
+    startYRef.current = e.clientY;
     setDragging(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   }
@@ -214,9 +232,29 @@ function Discover() {
     setDragX(e.clientX - startXRef.current);
   }
 
-  function onPointerUp() {
+  function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
     if (!dragging || flyingOut) return;
     setDragging(false);
+    const dx = e.clientX - startXRef.current;
+    const dy = e.clientY - startYRef.current;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Tap (sem arrastar) → navegar fotos
+    if (dist < 12 && cards[i]) {
+      const allPhotos = [cards[i].photo_url, ...cards[i].photos].filter(Boolean) as string[];
+      if (allPhotos.length > 1) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const tapX = e.clientX - rect.left;
+        if (tapX < rect.width / 2) {
+          setPhotoIdx((p) => Math.max(0, p - 1));
+        } else {
+          setPhotoIdx((p) => Math.min(allPhotos.length - 1, p + 1));
+        }
+      }
+      setDragX(0);
+      return;
+    }
+
     if (Math.abs(dragX) >= SWIPE_THRESHOLD) {
       const isLike = dragX > 0;
       setFlyingOut(true);
@@ -281,7 +319,7 @@ function Discover() {
         {/* Card de baixo (próximo) */}
         {nextCard && (
           <div style={nextStyle}>
-            <CardShell card={nextCard} />
+            <CardShell card={nextCard} photoIdx={0} />
           </div>
         )}
 
@@ -294,7 +332,7 @@ function Discover() {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
         >
-          <CardShell card={card}>
+          <CardShell card={card} photoIdx={photoIdx}>
             {/* Tint de cor ao arrastar */}
             <div
               className="absolute inset-0 pointer-events-none rounded-3xl transition-opacity"
@@ -353,13 +391,16 @@ function Discover() {
   );
 }
 
-function CardShell({ card, children }: { card: Card; children?: React.ReactNode }) {
+function CardShell({ card, photoIdx, children }: { card: Card; photoIdx: number; children?: React.ReactNode }) {
+  const allPhotos = [card.photo_url, ...card.photos].filter(Boolean) as string[];
+  const currentPhoto = allPhotos[photoIdx] ?? allPhotos[0] ?? null;
+
   return (
     <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-glow">
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted">
-        {card.photo_url ? (
+        {currentPhoto ? (
           <img
-            src={card.photo_url}
+            src={currentPhoto}
             alt={card.name ?? ""}
             className="h-full w-full object-cover pointer-events-none"
             draggable={false}
@@ -367,6 +408,16 @@ function CardShell({ card, children }: { card: Card; children?: React.ReactNode 
         ) : (
           <div className="grid h-full w-full place-items-center text-muted-foreground">Sem foto</div>
         )}
+
+        {/* Dots de navegação */}
+        {allPhotos.length > 1 && (
+          <div className="absolute top-3 inset-x-3 flex gap-1.5 pointer-events-none">
+            {allPhotos.map((_, idx) => (
+              <div key={idx} className={`flex-1 h-1 rounded-full transition-all ${idx === photoIdx ? "bg-white" : "bg-white/35"}`} />
+            ))}
+          </div>
+        )}
+
         {children}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 pt-20">
           <h2 className="font-display text-3xl font-bold text-white">
