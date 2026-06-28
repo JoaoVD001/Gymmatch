@@ -87,14 +87,14 @@ function Treino() {
   }, [user]);
 
   async function loadMatches(uid: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase.from as any)("matches")
-      .select("user1_id,user2_id")
-      .or(`user1_id.eq.${uid},user2_id.eq.${uid}`);
-    if (!data) return;
-    const ids = (data as { user1_id: string; user2_id: string }[])
-      .map((m) => m.user1_id === uid ? m.user2_id : m.user1_id);
-    if (!ids.length) return;
+    const { data } = await supabase
+      .from("matches")
+      .select("user_a,user_b")
+      .or(`user_a.eq.${uid},user_b.eq.${uid}`)
+      .eq("active", true);
+    if (!data?.length) return;
+    const ids = (data as { user_a: string; user_b: string }[])
+      .map((m) => m.user_a === uid ? m.user_b : m.user_a);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: profiles } = await (supabase.from as any)("profiles")
       .select("id,name,photo_url,gym")
@@ -308,71 +308,119 @@ function Treino() {
         )}
       </div>
 
-      {/* ══════════════════════════════════
-          MODAL DE CONVITE
-      ══════════════════════════════════ */}
+      {/* ══ MODAL DE CONVITE ══ */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/70 backdrop-blur-sm" onClick={() => setShowInviteModal(false)}>
-          <div className="w-full rounded-t-[32px] px-4 pt-3 pb-10 bg-card border border-border/50 border-b-0" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-border" />
+        <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)}>
+          <div
+            className="w-full rounded-t-[36px] px-5 pt-3 pb-10 border-t border-x border-border/40"
+            style={{ background: "linear-gradient(to bottom, oklch(0.17 0.012 280), oklch(0.13 0.01 280))" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* pill */}
+            <div className="mx-auto mb-6 h-1 w-12 rounded-full bg-white/10" />
 
             {invStep === 1 && (
               <>
-                <p className="text-base font-bold text-foreground mb-1">Convidar para treinar</p>
-                <p className="text-xs text-muted-foreground mb-4">Selecione um match</p>
-                {matches.length === 0
-                  ? <p className="text-sm text-muted-foreground/60 italic text-center py-8">Você ainda não tem matches.</p>
-                  : <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {matches.map((m) => (
-                        <button key={m.id} onClick={() => { setSelMatch(m); setInvStep(2); }}
-                          className="flex w-full items-center gap-3 rounded-2xl border border-border/50 bg-background p-3 text-left active:scale-[0.98] transition-all">
-                          {m.photo_url
-                            ? <img src={m.photo_url} className="h-10 w-10 rounded-full object-cover" alt="" />
-                            : <div className="grid h-10 w-10 place-items-center rounded-full bg-muted"><Dumbbell className="h-4 w-4 text-muted-foreground" /></div>
-                          }
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{m.name ?? "—"}</p>
-                            {m.gym && <p className="text-xs text-muted-foreground">{m.gym}</p>}
-                          </div>
-                        </button>
-                      ))}
+                {/* header */}
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-primary shadow-glow shrink-0">
+                    <UserPlus className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-base font-bold text-foreground">Convidar para treinar</p>
+                    <p className="text-xs text-muted-foreground">Escolha um dos seus matches</p>
+                  </div>
+                </div>
+
+                {matches.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 py-10">
+                    <div className="grid h-14 w-14 place-items-center rounded-full bg-muted/30">
+                      <Dumbbell className="h-6 w-6 text-muted-foreground/40" />
                     </div>
-                }
+                    <p className="text-sm text-muted-foreground/60">Você ainda não tem matches.</p>
+                    <p className="text-xs text-muted-foreground/40">Dê swipe no Discover para conectar!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    {matches.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => { setSelMatch(m); setInvStep(2); }}
+                        className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/8 p-3.5 text-left active:scale-[0.98] transition-all"
+                      >
+                        {m.photo_url
+                          ? <img src={m.photo_url} className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/30" alt="" />
+                          : <div className="grid h-11 w-11 place-items-center rounded-full bg-primary/20 ring-2 ring-primary/20"><Dumbbell className="h-4 w-4 text-primary" /></div>
+                        }
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground">{m.name ?? "—"}</p>
+                          {m.gym && <p className="text-xs text-muted-foreground truncate flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0" />{m.gym}</p>}
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </>
             )}
 
             {invStep === 2 && selMatch && (
               <>
-                <div className="flex items-center gap-2 mb-4">
-                  <button onClick={() => setInvStep(1)} className="text-muted-foreground text-sm">← Voltar</button>
-                  <p className="text-base font-bold text-foreground">Treino com {selMatch.name}</p>
+                {/* header */}
+                <div className="flex items-center gap-3 mb-5">
+                  <button
+                    onClick={() => setInvStep(1)}
+                    className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-muted-foreground active:scale-90 transition-all shrink-0"
+                  >
+                    <ChevronDown className="h-4 w-4 rotate-90" />
+                  </button>
+                  {selMatch.photo_url
+                    ? <img src={selMatch.photo_url} className="h-10 w-10 rounded-full object-cover ring-2 ring-primary/30" alt="" />
+                    : <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/20"><Dumbbell className="h-4 w-4 text-primary" /></div>
+                  }
+                  <div>
+                    <p className="text-base font-bold text-foreground">Treino com {selMatch.name}</p>
+                    <p className="text-xs text-muted-foreground">Defina data, hora e local</p>
+                  </div>
                 </div>
+
                 <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-semibold text-muted-foreground mb-1 block">Data</label>
-                    <input type="date" value={invDate} onChange={(e) => setInvDate(e.target.value)}
-                      min={new Date().toISOString().split("T")[0]}
-                      className="ipt w-full" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wide">Data</label>
+                      <input type="date" value={invDate} onChange={(e) => setInvDate(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wide">Horário</label>
+                      <input type="time" value={invTime} onChange={(e) => setInvTime(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
                   </div>
+
                   <div>
-                    <label className="text-xs font-semibold text-muted-foreground mb-1 block">Horário</label>
-                    <input type="time" value={invTime} onChange={(e) => setInvTime(e.target.value)} className="ipt w-full" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-muted-foreground mb-1 block">Academia</label>
+                    <label className="text-[11px] font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wide">Academia</label>
                     <input type="text" value={invAcademy} onChange={(e) => setInvAcademy(e.target.value)}
                       placeholder="Nome da academia..."
-                      className="ipt w-full" />
+                      className="w-full rounded-xl border border-white/10 bg-white/6 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+                    />
                     {selMatch.gym && (
-                      <button onClick={() => setInvAcademy(selMatch.gym!)} className="mt-1 text-xs text-primary">
-                        Usar academia do match: {selMatch.gym}
+                      <button
+                        onClick={() => setInvAcademy(selMatch.gym!)}
+                        className="mt-1.5 flex items-center gap-1 text-xs text-primary active:opacity-70"
+                      >
+                        <MapPin className="h-3 w-3" /> Usar academia do match: {selMatch.gym}
                       </button>
                     )}
                   </div>
+
                   <button
                     onClick={sendInvite}
                     disabled={!invDate || !invTime || !invAcademy.trim() || sending}
-                    className="w-full rounded-2xl py-3 text-sm font-semibold text-white bg-gradient-primary shadow-glow active:scale-[0.98] transition-all disabled:opacity-50"
+                    className="w-full rounded-2xl py-3.5 text-sm font-semibold text-white bg-gradient-primary shadow-glow active:scale-[0.98] transition-all disabled:opacity-40 mt-1"
                   >
                     {sending ? "Enviando..." : "Enviar convite 💪"}
                   </button>
@@ -380,7 +428,7 @@ function Treino() {
               </>
             )}
 
-            <button onClick={() => setShowInviteModal(false)} className="mt-3 w-full rounded-2xl py-3 text-sm font-semibold text-muted-foreground bg-muted/40 active:scale-[0.98] transition-all">
+            <button onClick={() => setShowInviteModal(false)} className="mt-3 w-full rounded-2xl py-3 text-sm font-semibold text-muted-foreground/60 active:scale-[0.98] transition-all">
               Cancelar
             </button>
           </div>
