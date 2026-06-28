@@ -177,7 +177,10 @@ function Treino() {
             </div>
           </div>
           <button
-            onClick={() => { setShowInviteModal(true); setInvStep(1); }}
+            onClick={() => {
+              if (matches.length === 0) { toast.info("Conecte-se com alguém no Discover para enviar convites de treino!"); return; }
+              setShowInviteModal(true); setInvStep(1);
+            }}
             className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white bg-gradient-primary shadow-glow active:scale-95 transition-all"
           >
             <UserPlus className="h-3.5 w-3.5" />
@@ -331,35 +334,25 @@ function Treino() {
                   </div>
                 </div>
 
-                {matches.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 py-10">
-                    <div className="grid h-14 w-14 place-items-center rounded-full bg-muted/30">
-                      <Dumbbell className="h-6 w-6 text-muted-foreground/40" />
-                    </div>
-                    <p className="text-sm text-muted-foreground/60">Você ainda não tem matches.</p>
-                    <p className="text-xs text-muted-foreground/40">Dê swipe no Discover para conectar!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                    {matches.map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => { setSelMatch(m); setInvStep(2); }}
-                        className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/8 p-3.5 text-left active:scale-[0.98] transition-all"
-                      >
-                        {m.photo_url
-                          ? <img src={m.photo_url} className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/30" alt="" />
-                          : <div className="grid h-11 w-11 place-items-center rounded-full bg-primary/20 ring-2 ring-primary/20"><Dumbbell className="h-4 w-4 text-primary" /></div>
-                        }
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground">{m.name ?? "—"}</p>
-                          {m.gym && <p className="text-xs text-muted-foreground truncate flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0" />{m.gym}</p>}
-                        </div>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {matches.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => { setSelMatch(m); setInvStep(2); }}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/8 p-3.5 text-left active:scale-[0.98] transition-all"
+                    >
+                      {m.photo_url
+                        ? <img src={m.photo_url} className="h-11 w-11 rounded-full object-cover ring-2 ring-primary/30" alt="" />
+                        : <div className="grid h-11 w-11 place-items-center rounded-full bg-primary/20 ring-2 ring-primary/20"><Dumbbell className="h-4 w-4 text-primary" /></div>
+                      }
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">{m.name ?? "—"}</p>
+                        {m.gym && <p className="text-xs text-muted-foreground truncate flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0" />{m.gym}</p>}
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+                    </button>
+                  ))}
+                </div>
               </>
             )}
 
