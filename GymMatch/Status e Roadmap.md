@@ -39,6 +39,10 @@
 - [x] "Quem curtiu você" bloqueado/limitado por plano
 - [x] Tela de sucesso pós-pagamento
 
+### Discover
+- [x] Navegação de fotos no card: toque na metade esquerda/direita da imagem troca de foto; barra de progresso no topo indica quantas fotos há e em qual está
+- [x] Exercícios por dia da semana: botão "Meus Exercícios" abre modal com grid dos 7 dias; ao selecionar um dia, lista e adiciona exercícios (nome, séries, reps); resumo aparece na tela principal
+
 ### Design
 - [x] Dark theme com design system próprio (oklch)
 - [x] Mobile-first

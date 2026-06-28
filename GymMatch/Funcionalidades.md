@@ -26,6 +26,7 @@
 - Interface de swipe com suporte a gestos touch (mobile-first)
 - Curtir ou passar sem que a outra pessoa saiba
 - Limite de likes diários no plano Free (20/dia)
+- **Navegação de fotos no card**: toque na metade esq/dir da imagem para ver todas as fotos postadas pelo usuário; barra de progresso estilo Stories no topo
 
 ## Sistema de Match
 
