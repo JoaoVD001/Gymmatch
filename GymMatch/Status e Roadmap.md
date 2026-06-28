@@ -97,8 +97,10 @@
 
 ### Produto
 - [ ] **Reuso de email após exclusão de conta** — ao excluir o perfil, deletar também o Auth user via `supabaseAdmin.auth.admin.deleteUser(userId)`, exceto se houver registro em `blocks`/`reports`
-- [ ] **Filtro de idade no Discover** — usuário define faixa etária (ex: 18–30) e o feed filtra os perfis; pode ser salvo nas preferências do usuário
-- [ ] **Filtro de proximidade / academias próximas** — usuário informa CEP ou endereço, sistema usa geocoding (ex: ViaCEP + Google Maps API ou Nominatim) para calcular distância e sugerir academias próximas; integrar com a seleção de academia no onboarding e no perfil
+- [ ] **Filtros do Discover nas Configurações** — tela de configurações ganha seção "Preferências de descoberta" com:
+  - Faixa etária (slider min–max)
+  - Distância máxima em km (o sistema usa o CEP/endereço do usuário para calcular proximidade das academias e filtrar o feed)
+  - Usuário salva as preferências e o Discover aplica automaticamente
 - [ ] Filtros avançados no discover (por objetivo, modalidade, horário) — exclusivo Diamond
 - [ ] Sistema de boost de perfil — aparecer primeiro no feed
 - [ ] Stories ou status de treino
