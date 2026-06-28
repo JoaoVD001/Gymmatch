@@ -90,8 +90,7 @@ function Treino() {
     const { data } = await supabase
       .from("matches")
       .select("user_a,user_b")
-      .or(`user_a.eq.${uid},user_b.eq.${uid}`)
-      .eq("active", true);
+      .or(`user_a.eq.${uid},user_b.eq.${uid}`);
     if (!data?.length) return;
     const ids = (data as { user_a: string; user_b: string }[])
       .map((m) => m.user_a === uid ? m.user_b : m.user_a);
